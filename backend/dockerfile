@@ -1,0 +1,17 @@
+# ใช้ Python image
+FROM python:3.11-slim
+
+# ตั้งค่า working directory
+WORKDIR /app
+
+# ลง dependencies สำหรับเชื่อมต่อ Postgres
+RUN apt-get update && apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/*
+
+# Copy ไฟล์ requirements (ถ้ามี) หรือติดตั้งตรงๆ
+RUN pip install fastapi uvicorn psycopg2-binary
+
+# Copy โค้ดทั้งหมดเข้าเครื่อง
+COPY . .
+
+# รัน FastAPI (พอร์ต 8000 และเปิดรับ Syslog 514)
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

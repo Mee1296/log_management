@@ -1,16 +1,18 @@
 services:
   db:
     image: postgres:15
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
-      POSTGRES_DB: log_management
-      POSTGRES_PASSWORD: password123
-    ports:
-      - "5432:5432"
+      - POSTGRES_PASSWORD=password123
+      - POSTGRES_DB=log_db
 
   backend:
     build: ./backend
     ports:
-      - [cite_start]"8000:8000"     # สำหรับ HTTP API Ingest [cite: 13]
-      - [cite_start]"514:514/udp"   # สำหรับ Syslog Ingest [cite: 12]
+      - "8000:8000"  # สำหรับ API
+      - "514:514/udp" # สำหรับ Syslog [cite: 12]
+    environment:
+      - DATABASE_URL=postgresql://postgres:password123@db:5432/log_db
     depends_on:
       - db
