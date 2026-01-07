@@ -1,0 +1,11 @@
+name: Log Management CI
+
+on: [push, pull_request]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Docker Images
+        run: docker-compose build
