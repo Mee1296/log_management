@@ -10,8 +10,8 @@ services:
   backend:
     build: ./backend
     ports:
-      - "8000:8000"  # สำหรับ API
-      - "514:514/udp" # สำหรับ Syslog [cite: 12]
+      - "8000:8000"  
+      - "514:514/udp" 
     environment:
       - DATABASE_URL=postgresql://postgres:password123@db:5432/log_db
     depends_on:
