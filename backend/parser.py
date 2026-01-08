@@ -1,67 +1,110 @@
 import re
 import datetime
 import json
+from pydantic import BaseModel, Field
+from typing import Optional
 
-def parse_syslog_text(raw_msg):
-    normalized = {
-        "raw_data": raw_msg,
-        "source": "firewall", # เริ่มต้นเป็น firewall
-        "timestamp": datetime.now().isoformat()
+
+class LogSchema(BaseModel):
+    timestamp: datetime.datetime
+    tenant: str = "default"
+    source: str
+    severity: int = 5
+    action: Optional[str] = None
+    src_ip: Optional[str] = None
+    dst_ip: Optional[str] = None
+    src_port: Optional[int] = None
+    dst_port: Optional[int] = None
+    protocol: Optional[str] = None
+    user_name: Optional[str] = None
+    host: Optional[str] = None
+    process: Optional[str] = None
+    url: Optional[str] = None
+    http_method: Optional[str] = None
+    status_code: Optional[int] = None
+    rule_name: Optional[str] = None
+    rule_id: Optional[str] = None
+    cloud_account_id: Optional[str] = None
+    cloud_region: Optional[str] = None
+    cloud_service: Optional[str] = None
+    raw_data: str
+
+
+def get_empty_schema():
+    return {
+        "timestamp": None, "tenant": "default", "source": None,
+        "vendor": None, "product": None, "severity": 5,
+        "action": None, "event_type": None, "event_subtype": None,
+        "src_ip": None, "dst_ip": None, "src_port": None, "dst_port": None,
+        "protocol": None, "user_name": None, "host": None, "process": None,
+        "url": None, "http_method": None, "status_code": None,
+        "rule_name": None, "rule_id": None, "cloud_account_id": None,
+        "cloud_region": None, "cloud_service": None, "raw_data": None
     }
 
-    # severity
+def parse_syslog_text(raw_msg):
+    extracted = {
+        "raw_data": raw_msg,
+        "source": "firewall",
+        "timestamp": datetime.datetime.now(),
+        "tenant": "internal_system" 
+    }
+
+    if "vendor" in raw_msg or "policy=" in raw_msg:
+        extracted["source"] = "firewall"
+    elif "event=link" in raw_msg or "if=" in raw_msg:
+        extracted["source"] = "network"
+    else:
+        extracted["source"] = "syslog_unknown"
+
     pri_match = re.search(r'<(.*?)>', raw_msg)
     if pri_match:
-        priority = int(pri_match.group(1))
-        normalized["severity"] = priority % 8 # Syslog severity calculation
+        extracted["severity"] = int(pri_match.group(1)) % 8
 
-    # hostname
-    parts = raw_msg.split(' ')
-    if len(parts) > 3:
-        normalized["host"] = parts[3]
-
-    # key-value pairs
     kv_pairs = re.findall(r'(\w+)=([\w\.\-\/:]+)', raw_msg)
     field_map = {
         "src": "src_ip", "dst": "dst_ip", "spt": "src_port", 
-        "dpt": "dst_port", "proto": "protocol", "vendor": "vendor",
-        "product": "product", "action": "action", "policy": "rule_name"
+        "dpt": "dst_port", "proto": "protocol", "action": "action",
+        "vendor": "vendor", "product": "product", "policy": "rule_name",
+        "event": "event_type", "reason": "event_subtype", "if": "process",
+        "host": "host"
     }
     
     for key, value in kv_pairs:
         if key in field_map:
-            normalized[field_map[key]] = value
+            extracted[field_map[key]] = value
 
-    # Network/router
-    if "event" in raw_msg and "mac=" in raw_msg:
-        normalized["source"] = "network"
-        normalized["event_type"] = re.search(r'event\s+(\S+)', raw_msg).group(1)
-        
-    return normalized
+    return LogSchema(**extracted).dict()
 
 def parse_log(raw_data, source_type):
-    normalized = {
-        "timestamp": datetime.datetime.now().isoformat(),
-        "tenant": "default",
+    data = raw_data if isinstance(raw_data, dict) else json.loads(raw_data)
+    
+    extracted = {
+        "raw_data": json.dumps(data),
         "source": source_type,
-        "severity": 5,
-        "raw_data": json.dumps(raw_data) if isinstance(raw_data, dict) else raw_data 
+        "timestamp": data.get("@timestamp") or datetime.datetime.now(),
+        "tenant": data.get("tenant", "default"),
+        "severity": data.get("severity", 5),
+        "action": data.get("action"),
+        "event_type": data.get("event_type"),
+        "user_name": data.get("user") or data.get("user_name"),
+        "host": data.get("host"),
+        "process": data.get("process")
     }
 
-    if source_type in ["api", "crowdstrike", "aws", "m365"]:
-        # JSON
-        data = raw_data if isinstance(raw_data, dict) else json.loads(raw_data)
-        normalized.update({
-            "timestamp": data.get("@timestamp", normalized["timestamp"]),
-            "tenant": data.get("tenant", "default"),
-            "event_type": data.get("event_type"),
-            "user_name": data.get("user") or data.get("user_name"),
-            "severity": data.get("severity", 5),
-            "action": data.get("action")
+    if "cloud" in data:
+        extracted.update({
+            "cloud_account_id": data["cloud"].get("account_id"),
+            "cloud_region": data["cloud"].get("region"),
+            "cloud_service": data["cloud"].get("service")
         })
-        # Cloud
-        if "cloud" in data:
-            normalized["cloud_account_id"] = data["cloud"].get("account_id")
-            normalized["cloud_region"] = data["cloud"].get("region")
 
-    return normalized
+    try:
+        return LogSchema(**extracted).dict()
+    except Exception as e:
+        print(f"Validation Error for {source_type}: {e}")
+        return LogSchema(
+            timestamp=datetime.datetime.now(),
+            source=source_type,
+            raw_data=str(raw_data)
+        ).dict()

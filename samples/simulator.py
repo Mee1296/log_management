@@ -82,7 +82,6 @@ logs = logs = [
 ]
 
 def send_udp_syslog():
-    # ข้อมูลจากข้อ 4.1 และ 4.2 ในไฟล์ PDF 
     raw_logs = [
         "<134>Aug 20 12:44:56 fw01 vendor=demo product=ngfw action=deny src=10.0.1.10 dst=8.8.8.8 spt=5353 dpt=53 proto=udp msg=DNS blocked policy=Block-DNS",
         "<190>Aug 20 13:01:02 r1 if=ge-0/0/1 event=link-down mac=aa:bb:cc:dd:ee:ff reason=carrier-loss"
@@ -90,8 +89,11 @@ def send_udp_syslog():
     
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     for msg in raw_logs:
-        print(f"Sending UDP Syslog: {msg}")
-        sock.sendto(msg.encode('utf-8'), ("localhost", 514))
+        try :
+            print(f"Sending UDP Syslog: {msg}")
+            sock.sendto(msg.encode('utf-8'), ("127.0.0.1", 514))
+        except Exception as e:
+            print(f"UDP Send Error: {e}")
         time.sleep(0.5)
 
 def run_test():
@@ -102,8 +104,8 @@ def run_test():
             print(f"Status: {response.status_code}, Response: {response.json()}")
         except Exception as e:
             print(f"Failed to connect: {e}")
-        time.sleep(1)
+        time.sleep(0.5)
 
 if __name__ == "__main__":
-    run_test()
+    # run_test()
     send_udp_syslog()
