@@ -9,13 +9,20 @@ class LogSchema(BaseModel):
     timestamp: datetime.datetime
     tenant: str = "default"
     source: str
+    vendor: Optional[str] = None
+    product: Optional[str] = None      
     severity: int = 5
     action: Optional[str] = None
+    event_type: Optional[str] = None
+    event_subtype: Optional[str] = None
     src_ip: Optional[str] = None
     dst_ip: Optional[str] = None
     src_port: Optional[int] = None
     dst_port: Optional[int] = None
     protocol: Optional[str] = None
+    message: Optional[str] = None      
+    policy: Optional[str] = None       
+    interface: Optional[str] = None    
     user_name: Optional[str] = None
     host: Optional[str] = None
     process: Optional[str] = None
@@ -29,28 +36,14 @@ class LogSchema(BaseModel):
     cloud_service: Optional[str] = None
     raw_data: str
 
-
-def get_empty_schema():
-    return {
-        "timestamp": None, "tenant": "default", "source": None,
-        "vendor": None, "product": None, "severity": 5,
-        "action": None, "event_type": None, "event_subtype": None,
-        "src_ip": None, "dst_ip": None, "src_port": None, "dst_port": None,
-        "protocol": None, "user_name": None, "host": None, "process": None,
-        "url": None, "http_method": None, "status_code": None,
-        "rule_name": None, "rule_id": None, "cloud_account_id": None,
-        "cloud_region": None, "cloud_service": None, "raw_data": None
-    }
-
 def parse_syslog_text(raw_msg):
     extracted = {
         "raw_data": raw_msg,
-        "source": "firewall",
         "timestamp": datetime.datetime.now(),
         "tenant": "internal_system" 
     }
 
-    if "vendor" in raw_msg or "policy=" in raw_msg:
+    if "vendor=" in raw_msg or "policy=" in raw_msg:
         extracted["source"] = "firewall"
     elif "event=link" in raw_msg or "if=" in raw_msg:
         extracted["source"] = "network"
@@ -61,20 +54,38 @@ def parse_syslog_text(raw_msg):
     if pri_match:
         extracted["severity"] = int(pri_match.group(1)) % 8
 
-    kv_pairs = re.findall(r'(\w+)=([\w\.\-\/:]+)', raw_msg)
+    kv_pairs = re.findall(r'(\w+)=(.+?)(?=\s+\w+=|$)', raw_msg)
     field_map = {
-        "src": "src_ip", "dst": "dst_ip", "spt": "src_port", 
-        "dpt": "dst_port", "proto": "protocol", "action": "action",
-        "vendor": "vendor", "product": "product", "policy": "rule_name",
-        "event": "event_type", "reason": "event_subtype", "if": "process",
-        "host": "host"
+        "src": "src_ip", 
+        "dst": "dst_ip", 
+        "spt": "src_port", 
+        "dpt": "dst_port", 
+        "proto": "protocol", 
+        "action": "action",
+        "vendor": "vendor", 
+        "product": "product", 
+        "policy": "policy",     
+        "msg": "message",       
+        "event": "event_type", 
+        "reason": "event_subtype", 
+        "if": "interface",      
+        "mac": "mac_address"        
     }
     
     for key, value in kv_pairs:
+        clean_val = value.strip()
         if key in field_map:
-            extracted[field_map[key]] = value
+            if "port" in field_map[key]:
+                try: extracted[field_map[key]] = int(clean_val)
+                except: pass
+            else:
+                extracted[field_map[key]] = clean_val
 
-    return LogSchema(**extracted).dict()
+    parts = raw_msg.split()
+    if len(parts) >= 4:
+        extracted["host"] = parts[3]
+
+    return LogSchema(**extracted).model_dump()
 
 def parse_log(raw_data, source_type):
     data = raw_data if isinstance(raw_data, dict) else json.loads(raw_data)
@@ -100,11 +111,11 @@ def parse_log(raw_data, source_type):
         })
 
     try:
-        return LogSchema(**extracted).dict()
+        return LogSchema(**extracted).model_dump()
     except Exception as e:
         print(f"Validation Error for {source_type}: {e}")
         return LogSchema(
             timestamp=datetime.datetime.now(),
             source=source_type,
             raw_data=str(raw_data)
-        ).dict()
+        ).model_dump()

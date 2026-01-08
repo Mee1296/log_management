@@ -65,3 +65,4 @@ frontend/build/
 .coverage
 htmlcov/
 pytest_cache/
+tests/

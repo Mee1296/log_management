@@ -17,6 +17,7 @@ CREATE TABLE logs (
     message TEXT,
     policy VARCHAR(200),
     interface VARCHAR(100),
+    mac_address VARCHAR(50),
     user_name VARCHAR(100),
     host VARCHAR(100),
     process VARCHAR(200),
