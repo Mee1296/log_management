@@ -10,4 +10,4 @@ jobs:
       - name: Build Docker Images
         run: docker compose build
       - name: Run Unit Tests
-        run: docker compose run --rm backend pytest
+        run: docker compose run --rm backend python -m pytest . -v

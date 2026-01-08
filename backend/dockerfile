@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/*
 
-RUN pip install fastapi uvicorn psycopg2-binary pydantic
+RUN pip install fastapi uvicorn psycopg2-binary pydantic pytest httpx
 
 COPY . .
 
