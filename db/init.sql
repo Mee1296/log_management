@@ -31,7 +31,6 @@ CREATE TABLE logs (
     raw_data TEXT,                 
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
-
 CREATE INDEX idx_logs_timestamp ON logs(timestamp);
 CREATE INDEX idx_logs_tenant ON logs(tenant);
 CREATE INDEX idx_logs_source ON logs(source);
