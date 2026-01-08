@@ -1,23 +1,62 @@
-from fastapi import FastAPI, Request, HTTPException
-import psycopg2
-import os
-import datetime
+from typing import Optional
+from fastapi import FastAPI, Request, HTTPException, Query
+from db import save_to_db, fetch_from_db
 import threading
 import socket
 from parser import parse_log, parse_syslog_text
-from psycopg2.extras import execute_values
 
 app = FastAPI()
-
-DB_URL = os.getenv("DATABASE_URL")
 
 @app.get("/")
 def root():
     return {"status": "running", "protocol": ["HTTP", "UDP/514"]}
 
-# @app.get()
-
+# search api for each tenant
+@app.get("/api/v1/logs")
+async def get_logs(
+        tenant: str, 
+        source: Optional[str] = None, 
+        severity: Optional[int] = None,
+        limit: int = Query(100, le=1000)
+    ):
+    query = "SELECT * FROM logs WHERE tenant = %s"
+    params = [tenant]
     
+    if source:
+        query += " AND source = %s"
+        params.append(source)
+    if severity is not None:
+        query += " AND severity = %s"
+        params.append(severity)
+        
+    query += " ORDER BY timestamp DESC LIMIT %s"
+    params.append(limit)
+    
+    return fetch_from_db(query, tuple(params))
+
+# for top sources
+@app.get("/api/v1/stats/sources/{tenant}")
+async def get_stats_sources(tenant: str):
+    query = """
+        SELECT source, COUNT(*) as count 
+        FROM logs WHERE tenant = %s 
+        GROUP BY source 
+        ORDER BY count DESC
+    """
+    return fetch_from_db(query, (tenant,))
+    
+# Timeline api
+@app.get("/api/v1/stats/timeline/{tenant}")
+async def get_stats_timeline(tenant: str):
+    query = """
+        SELECT date_trunc('hour', timestamp) as bucket, COUNT(*) as count 
+        FROM logs 
+        WHERE tenant = %s 
+        GROUP BY bucket 
+        ORDER BY bucket ASC
+    """
+    return fetch_from_db(query, (tenant,))
+
 @app.post("/ingest/{source_type}")
 async def ingest_logs(source_type: str, request: Request):
     data = await request.json()
@@ -29,21 +68,6 @@ async def ingest_logs(source_type: str, request: Request):
     parsed = parse_log(data, source_type) 
     save_to_db(parsed) 
     return {"status": "stored", "data": parsed}
-
-def save_to_db(normalized_data):
-    columns = normalized_data.keys()
-    values = [normalized_data[col] for col in columns]
-    
-    try:
-        conn = psycopg2.connect(DB_URL)
-        cur = conn.cursor()
-
-        query = f"INSERT INTO logs ({', '.join(columns)}) VALUES ({', '.join(['%s'] * len(columns))})"
-        
-        cur.execute(query, values)
-        conn.commit()
-    except Exception as e:
-        print(f"DB Error: {e}")
 
 def syslog_udp_server():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

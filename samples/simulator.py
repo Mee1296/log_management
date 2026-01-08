@@ -107,5 +107,5 @@ def run_test():
         time.sleep(0.5)
 
 if __name__ == "__main__":
-    # run_test()
+    run_test()
     send_udp_syslog()
