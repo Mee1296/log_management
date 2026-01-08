@@ -32,7 +32,7 @@ CREATE TABLE logs (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_logs_event_time ON logs(event_time);
+CREATE INDEX idx_logs_timestamp ON logs(timestamp);
 CREATE INDEX idx_logs_tenant ON logs(tenant);
 CREATE INDEX idx_logs_source ON logs(source);
 CREATE INDEX idx_logs_raw_data ON logs USING GIN (raw_data);
