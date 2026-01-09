@@ -38,5 +38,5 @@ def test_invalid_json():
 
 def test_empty_syslog():
     result = parse_syslog_text("")
-    assert result["raw_data"] == ""
+    assert result["raw_data"] == {"full_message": ""}
     assert result["tenant"] == "internal_system"
