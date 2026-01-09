@@ -1,8 +1,8 @@
-# 🛡️ Log Management Appliance
+# Log Management Appliance
 
 A high-performance, single-appliance log management solution designed for real-time telemetry, search, and visualization.
 
-## 🏗️ System Architecture
+## System Architecture
 
 The system runs as a containerized appliance managed by Docker Compose.
 
@@ -59,7 +59,7 @@ graph TD
 *   **CI/CD**: GitHub Actions (Pytest + Vitest)
 *   **Testing**: `pytest` (Backend), `vitest` (Frontend)
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 *   Docker & Docker Compose
@@ -70,17 +70,17 @@ graph TD
     docker-compose up --build -d
     ```
 2.  **Access the Dashboard**:
-    *   Open `http://localhost`
+    *   Open `http://localhost:8000`
 3.  **Send Logs**:
     *   **Syslog (UDP)**: Send to `localhost:514`
     *   **HTTP**: POST to `http://localhost/ingest/http` with header `X-API-Key: secret-key-123`
 
-## 🧪 Testing
+## Testing
 
 ### Running Tests
 *   **Frontend**: `cd frontend && npm test`
 *   **Backend**: `cd backend && pytest`
 *   **CI**: Automatically runs on push via `.github/workflows/ci.yml`.
 
-## 📜 API Documentation
+## API Documentation
 Once running, full Swagger UI is available at: `http://localhost/docs` (proxied via `/api/docs` if configured, otherwise port 8000 directly during dev).
