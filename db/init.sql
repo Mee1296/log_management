@@ -29,7 +29,7 @@ CREATE TABLE logs (
     cloud_account_id VARCHAR(50), 
     cloud_region VARCHAR(50),
     cloud_service VARCHAR(100),
-    raw_data TEXT,                 
+    raw_data JSONB,                 
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX idx_logs_timestamp ON logs(timestamp);

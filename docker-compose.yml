@@ -9,10 +9,20 @@ services:
 
   backend:
     build: ./backend
-    ports:
-      - "8000:8000"  
-      - "514:514/udp" 
     environment:
       - DATABASE_URL=postgresql://postgres:password123@db:5432/log_db
+    ports:
+      - "514:514/udp" # Syslog UDP
+      - "8000:8000"
     depends_on:
       - db
+
+  frontend:
+    build: ./frontend
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80" # HTTP
+      # - "443:443" # HTTPS (requires certs)
+    depends_on:
+      - backend

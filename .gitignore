@@ -53,9 +53,10 @@ postgres-data/
 Thumbs.db
 
 # =========================
-# Frontend (ถ้ามี build)
+# Frontend 
 # =========================
 frontend/node_modules/
+node_modules/
 frontend/dist/
 frontend/build/
 
@@ -66,3 +67,8 @@ frontend/build/
 htmlcov/
 pytest_cache/
 tests/
+
+# =========================
+# Readme for frontend build
+# =========================
+Readme.md

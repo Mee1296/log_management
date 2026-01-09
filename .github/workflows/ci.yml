@@ -9,5 +9,18 @@ jobs:
       - uses: actions/checkout@v3
       - name: Build Docker Images
         run: docker compose build
-      - name: Run Unit Tests
+      - name: Run Backend Unit Tests
         run: docker compose run --rm backend python -m pytest . -v
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run Frontend Tests
+        working-directory: ./frontend
+        run: npm test

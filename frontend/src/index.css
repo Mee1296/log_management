@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-950 text-gray-200 font-mono;
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-900;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-700 rounded;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-cyan-500;
+}
+
+/* Neon Glow Utilities */
+.neon-border {
+  box-shadow: 0 0 5px theme('colors.cyan.500'),
+    inset 0 0 5px theme('colors.cyan.900');
+}
+
+.neon-text {
+  text-shadow: 0 0 5px theme('colors.cyan.400');
+}

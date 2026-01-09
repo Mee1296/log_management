@@ -96,11 +96,20 @@ def send_udp_syslog():
             print(f"UDP Send Error: {e}")
         time.sleep(0.5)
 
+HEADERS = {
+    "X-API-KEY": "admin-key",
+    "Content-Type": "application/json"
+}
+
 def run_test():
     for log in logs:
         print(f"Sending {log['type']} log...")
         try:
-            response = requests.post(f"{BASE_URL}/{log['type']}", json=log['data'])
+            response = requests.post(
+                f"{BASE_URL}/{log['type']}", 
+                json=log['data'], 
+                headers=HEADERS 
+            )
             print(f"Status: {response.status_code}, Response: {response.json()}")
         except Exception as e:
             print(f"Failed to connect: {e}")

@@ -3,7 +3,7 @@ import datetime
 import json
 from pydantic import BaseModel, Field
 from typing import Optional
-
+from typing import Any
 
 class LogSchema(BaseModel):
     timestamp: datetime.datetime
@@ -34,11 +34,11 @@ class LogSchema(BaseModel):
     cloud_account_id: Optional[str] = None
     cloud_region: Optional[str] = None
     cloud_service: Optional[str] = None
-    raw_data: str
+    raw_data: Any
 
 def parse_syslog_text(raw_msg):
     extracted = {
-        "raw_data": raw_msg,
+        "raw_data": {"full_message": raw_msg}, 
         "timestamp": datetime.datetime.now(),
         "tenant": "internal_system" 
     }
