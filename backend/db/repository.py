@@ -1,7 +1,6 @@
-from fastapi import FastAPI, Request, HTTPException, Query
 import os
 import psycopg2
-from parser import parse_log, parse_syslog_text
+from services.parser import parse_log, parse_syslog_text
 from psycopg2.extras import execute_values
 import json
 

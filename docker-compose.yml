@@ -29,9 +29,10 @@ services:
 
   log-cleaner:
     build: ./backend
-    command: python retention_policy.py
+    command: python db/retention_policy.py
     environment:
       - DATABASE_URL=postgresql://postgres:password123@db:5432/log_db
+      - PYTHONPATH=/app
     depends_on:
       - db
     restart: always

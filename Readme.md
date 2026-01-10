@@ -39,7 +39,7 @@ graph TD
     *   Proxies API requests (`/api/*`) to the backend.
     *   Single entry point (Port 80) for the dashboard.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Backend
 *   **Language**: Python 3.11
