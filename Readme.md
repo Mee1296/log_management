@@ -70,10 +70,10 @@ graph TD
     docker-compose up --build -d
     ```
 2.  **Access the Dashboard**:
-    *   Open `http://localhost:8000`
+    *   Open `http://localhost`
 3.  **Send Logs**:
     *   **Syslog (UDP)**: Send to `localhost:514`
-    *   **HTTP**: POST to `http://localhost/ingest/http` with header `X-API-Key: secret-key-123`
+    *   **HTTP**: POST to `http://localhost/ingest/http` with header `X-API-Key: secret-key-123` ***Not real API-key***
 
 ## Testing
 
@@ -83,4 +83,4 @@ graph TD
 *   **CI**: Automatically runs on push via `.github/workflows/ci.yml`.
 
 ## API Documentation
-Once running, full Swagger UI is available at: `http://localhost/docs` (proxied via `/api/docs` if configured, otherwise port 8000 directly during dev).
+Once running, full Swagger UI is available at: `http://localhost:8000/docs` (proxied via `/api/docs` if configured, otherwise port 8000 directly during dev).
