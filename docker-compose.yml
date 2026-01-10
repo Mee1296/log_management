@@ -4,13 +4,16 @@ services:
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
-      - POSTGRES_PASSWORD=password123
-      - POSTGRES_DB=log_db
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
 
   backend:
     build: ./backend
     environment:
-      - DATABASE_URL=postgresql://postgres:password123@db:5432/log_db
+      - DATABASE_URL=${DATABASE_URL}
+      - ADMIN_USER=${ADMIN_USER}
+      - ADMIN_PASS=${ADMIN_PASS}
+      - INGEST_API_KEY_NAME=${INGEST_API_KEY_NAME}
     ports:
       - "514:514/udp" # Syslog UDP
       - "8000:8000"
@@ -31,7 +34,7 @@ services:
     build: ./backend
     command: python db/retention_policy.py
     environment:
-      - DATABASE_URL=postgresql://postgres:password123@db:5432/log_db
+      - DATABASE_URL=${DATABASE_URL}
       - PYTHONPATH=/app
     depends_on:
       - db

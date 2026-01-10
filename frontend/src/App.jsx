@@ -3,9 +3,11 @@ import { fetchLogs, fetchTimelineStats, fetchSourceStats } from './services/api'
 import SummaryCard from './components/SummaryCard';
 import LogTable from './components/LogTable';
 import LogChart from './components/LogChart';
-import { Activity, Database, Server, Search, RefreshCw, Terminal } from 'lucide-react';
+import Login from './components/Login';
+import { Activity, Database, Server, Search, RefreshCw, Terminal, LogOut } from 'lucide-react';
 
 function App() {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [tenant, setTenant] = useState('default');
     const [searchTenant, setSearchTenant] = useState('default');
     const [logs, setLogs] = useState([]);
@@ -17,15 +19,15 @@ function App() {
     const [isRefreshing, setIsRefreshing] = useState(false);
 
     // Consolidated fetch function
-    const executeFetch = async (isBackground = false) => {
+    const executeFetch = async (currentTenant, isBackground = false) => {
         if (!isBackground) setIsInitialLoading(true);
         else setIsRefreshing(true);
 
         try {
             const [l, t, s] = await Promise.all([
-                fetchLogs(searchTenant),
-                fetchTimelineStats(searchTenant),
-                fetchSourceStats(searchTenant)
+                fetchLogs(currentTenant),
+                fetchTimelineStats(currentTenant),
+                fetchSourceStats(currentTenant)
             ]);
             setLogs(l || []);
             setTimeline(t || []);
@@ -40,15 +42,17 @@ function App() {
 
     // Effect for polling
     useEffect(() => {
-        executeFetch(false); // Initial load
+        if (!isLoggedIn) return;
 
-        // Poll every 5 seconds, but don't trigger "isInitialLoading"
+        executeFetch(searchTenant, false); // Initial load
+
+        // Poll every 5 seconds
         const interval = setInterval(() => {
-            executeFetch(true);
+            executeFetch(searchTenant, true);
         }, 5000);
 
         return () => clearInterval(interval);
-    }, [searchTenant]);
+    }, [searchTenant, isLoggedIn]);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -56,6 +60,10 @@ function App() {
             setSearchTenant(tenant);
         }
     };
+
+    if (!isLoggedIn) {
+        return <Login onLogin={() => setIsLoggedIn(true)} />;
+    }
 
     return (
         <div className="min-h-screen bg-gray-950 text-gray-200">
@@ -87,6 +95,13 @@ function App() {
                                 <RefreshCw className="w-3 h-3 animate-spin" /> SYNCING
                             </span>
                         )}
+                        <button
+                            onClick={() => setIsLoggedIn(false)}
+                            className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                            title="Logout"
+                        >
+                            <LogOut className="w-5 h-5" />
+                        </button>
                     </div>
                 </header>
 

@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Query, Depends
 from services.parser import parse_log
-from db.repository import save_to_db
+from db.repository import save_to_db, fetch_from_db
 from typing import Optional
+from api.auth import verify_ingest_key
 
 router = APIRouter()
 
 # search api for each tenant
-@router.get("logs")
+@router.get("/logs")
 async def get_logs(
         tenant: str, 
         source: Optional[str] = None, 
@@ -29,7 +30,7 @@ async def get_logs(
     return fetch_from_db(query, tuple(params))
 
 # for top sources
-@router.get("stats/sources/{tenant}")
+@router.get("/stats/sources/{tenant}")
 async def get_stats_sources(tenant: str):
     query = """
         SELECT source, COUNT(*) as count 
@@ -40,7 +41,7 @@ async def get_stats_sources(tenant: str):
     return fetch_from_db(query, (tenant,))
     
 # Timeline api
-@router.get("stats/timeline/{tenant}")
+@router.get("/stats/timeline/{tenant}")
 async def get_stats_timeline(tenant: str):
     query = """
         SELECT date_trunc('hour', timestamp) as bucket, COUNT(*) as count 
@@ -52,7 +53,7 @@ async def get_stats_timeline(tenant: str):
     return fetch_from_db(query, (tenant,))
 
 # Severity trend api
-@router.get("stats/severity-trend/{tenant}")
+@router.get("/stats/severity-trend/{tenant}")
 async def get_severity_trend(tenant: str):
     query = """
         SELECT 
