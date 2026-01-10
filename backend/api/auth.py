@@ -6,9 +6,11 @@ import os
 
 router = APIRouter()
 
-# Configuration (Env vars with defaults)
-ADMIN_USER = os.getenv("ADMIN_USER", "default_name")
-ADMIN_PASS = os.getenv("ADMIN_PASS", "default_pass")
+ADMIN_USER = os.getenv("ADMIN_USER", "admin")
+ADMIN_PASS = os.getenv("ADMIN_PASS", "admin")
+VIEWER_USER = os.getenv("VIEWER_USER", "viewer")
+VIEWER_PASS = os.getenv("VIEWER_PASS", "viewer")
+VIEWER_TENANT = os.getenv("VIEWER_TENANT", "demo") # Default tenant for viewer
 
 # Ingest API Key Config
 API_KEY_NAME = os.getenv("INGEST_API_KEY_NAME", "DEFAULT_INGEST_KEY")
@@ -33,6 +35,25 @@ BLOCK_HOURS = 1
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+class User(BaseModel):
+    username: str
+    role: str
+    tenant_access: str 
+
+async def get_current_user(token: str = Depends(APIKeyHeader(name="Authorization", auto_error=False))):
+    
+    if not token:
+        raise HTTPException(status_code=401, detail="Missing Token")
+    
+    token_val = token.replace("Bearer ", "")
+    
+    if token_val == "admin-token":
+        return User(username=ADMIN_USER, role="admin", tenant_access="*")
+    elif token_val == "viewer-token":
+        return User(username=VIEWER_USER, role="viewer", tenant_access=VIEWER_TENANT)
+    else:
+         raise HTTPException(status_code=401, detail="Invalid Token")
 
 def get_client_ip(request: Request):
     return request.client.host
@@ -66,13 +87,31 @@ async def login(creds: LoginRequest, request: Request):
                 del failed_logins[ip]
 
     # 2. Verify Credentials
+    # 2. Verify Credentials
     if creds.username == ADMIN_USER and creds.password == ADMIN_PASS:
         # Success: Clean up failures
         if ip in failed_logins:
             del failed_logins[ip]
         if ip in blocked_ips:
             del blocked_ips[ip]
-        return {"status": "success", "token": "logged-in-mock-token"}
+        return {
+            "status": "success", 
+            "token": "admin-token", 
+            "role": "admin", 
+            "tenant_access": "*"
+        }
+
+    if creds.username == VIEWER_USER and creds.password == VIEWER_PASS:
+         if ip in failed_logins:
+            del failed_logins[ip]
+         if ip in blocked_ips:
+            del blocked_ips[ip]
+         return {
+            "status": "success", 
+            "token": "viewer-token", 
+            "role": "viewer", 
+            "tenant_access": VIEWER_TENANT
+        }
 
     # 3. Handle Failure
     cleanup_old_failures(ip)

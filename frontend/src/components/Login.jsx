@@ -24,7 +24,7 @@ function Login({ onLogin }) {
             });
 
             if (response.data.status === 'success') {
-                onLogin(response.data.token);
+                onLogin(response.data);
             }
         } catch (err) {
             if (err.response && err.response.status === 403) {

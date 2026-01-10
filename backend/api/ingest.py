@@ -1,10 +1,56 @@
 from fastapi import APIRouter, Request, HTTPException, Query, Depends
 from services.parser import parse_log
-from db.repository import save_to_db, fetch_from_db
-from typing import Optional
-from api.auth import verify_ingest_key
+from db.repository import save_to_db, fetch_from_db, save_alert
+from typing import Optional, Union, List
+from api.auth import verify_ingest_key, get_current_user, User
+from datetime import datetime
 
 router = APIRouter()
+
+def validate_tenant_access(user: User, tenant: str):
+    if user.role != "admin" and user.tenant_access != tenant:
+        raise HTTPException(status_code=403, detail="Access to this tenant is forbidden")
+
+# ... (GET endpoints remain same, skipping to ingest) ...
+
+@router.post("/ingest/{source_type}", dependencies=[Depends(verify_ingest_key)])
+async def ingest_logs(source_type: str, request: Request):
+    data = await request.json()
+    
+    # Normalize to list
+    if isinstance(data, dict):
+        data = [data]
+        
+    if not isinstance(data, list):
+         raise HTTPException(status_code=400, detail="Payload must be JSON object or array")
+
+    parsed_list = []
+    
+    for item in data:
+        # Tenant check per item? Or assume header? 
+        # Simulator sends tenant in body.
+        tenant = item.get("tenant") or request.headers.get("X-Tenant-ID")
+        if not tenant:
+            # Skip or fail? Let's skip valid items without tenant if strict, 
+            # but parser handles default.
+            pass
+
+        parsed = parse_log(item, source_type)
+        parsed_list.append(parsed)
+        
+        # ALERT LOGIC
+        if parsed.get("severity", 0) >= 8:
+            alert_payload = {
+                "timestamp": parsed.get("timestamp") or datetime.now(),
+                "severity": parsed.get("severity"),
+                "message": str(parsed.get("event_type") or parsed.get("message") or "High Severity Event"),
+                "source": parsed.get("source"),
+                "tenant": parsed.get("tenant")
+            }
+            save_alert(alert_payload)
+
+    save_to_db(parsed_list) 
+    return {"status": "stored", "count": len(parsed_list)}
 
 # search api for each tenant
 @router.get("/logs")
@@ -12,8 +58,11 @@ async def get_logs(
         tenant: str, 
         source: Optional[str] = None, 
         severity: Optional[int] = None,
-        limit: int = Query(100, le=1000)
+        limit: int = Query(100, le=1000),
+        user: User = Depends(get_current_user)
     ):
+    validate_tenant_access(user, tenant)
+    
     query = "SELECT * FROM logs WHERE tenant = %s"
     params = [tenant]
     
@@ -31,7 +80,8 @@ async def get_logs(
 
 # for top sources
 @router.get("/stats/sources/{tenant}")
-async def get_stats_sources(tenant: str):
+async def get_stats_sources(tenant: str, user: User = Depends(get_current_user)):
+    validate_tenant_access(user, tenant)
     query = """
         SELECT source, COUNT(*) as count 
         FROM logs WHERE tenant = %s 
@@ -42,7 +92,8 @@ async def get_stats_sources(tenant: str):
     
 # Timeline api
 @router.get("/stats/timeline/{tenant}")
-async def get_stats_timeline(tenant: str):
+async def get_stats_timeline(tenant: str, user: User = Depends(get_current_user)):
+    validate_tenant_access(user, tenant)
     query = """
         SELECT date_trunc('hour', timestamp) as bucket, COUNT(*) as count 
         FROM logs 
@@ -54,7 +105,8 @@ async def get_stats_timeline(tenant: str):
 
 # Severity trend api
 @router.get("/stats/severity-trend/{tenant}")
-async def get_severity_trend(tenant: str):
+async def get_severity_trend(tenant: str, user: User = Depends(get_current_user)):
+    validate_tenant_access(user, tenant)
     query = """
         SELECT 
             date_trunc('hour', timestamp) as time_bucket,
@@ -67,14 +119,3 @@ async def get_severity_trend(tenant: str):
     """
     return fetch_from_db(query, (tenant,))
 
-@router.post("/ingest/{source_type}", dependencies=[Depends(verify_ingest_key)])
-async def ingest_logs(source_type: str, request: Request):
-    data = await request.json()
-    
-    tenant = data.get("tenant") or request.headers.get("X-Tenant-ID")
-    if not tenant:
-        raise HTTPException(status_code=400, detail="Missing tenant information")
-
-    parsed = parse_log(data, source_type) 
-    save_to_db(parsed) 
-    return {"status": "stored", "data": parsed}

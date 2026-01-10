@@ -1,0 +1,183 @@
+{
+    "info": {
+        "_postman_id": "log-management-v1",
+        "name": "Log Management System API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/v1/login",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "v1",
+                                "login"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Ingestion",
+            "item": [
+                {
+                    "name": "Ingest Single Log",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "secret-key-123",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"tenant\": \"demo\",\n    \"source\": \"api\",\n    \"message\": \"Test log\",\n    \"severity\": 5\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/v1/ingest/manual",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "v1",
+                                "ingest",
+                                "manual"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Ingest Batch (High Severity)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "secret-key-123",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "[\n    {\n        \"tenant\": \"demo\",\n        \"source\": \"batch\",\n        \"message\": \"Normal log\",\n        \"severity\": 1\n    },\n    {\n        \"tenant\": \"demo\",\n        \"source\": \"batch\",\n        \"message\": \"CRITICAL ERROR\",\n        \"severity\": 9\n    }\n]",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/v1/ingest/batch",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "v1",
+                                "ingest",
+                                "batch"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Search & Stats",
+            "item": [
+                {
+                    "name": "Get Logs (Admin)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer admin-token",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/api/v1/logs?tenant=demo",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "v1",
+                                "logs"
+                            ],
+                            "query": [
+                                {
+                                    "key": "tenant",
+                                    "value": "demo"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Alerts",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer admin-token",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/api/v1/alerts",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "v1",
+                                "alerts"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

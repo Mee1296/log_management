@@ -8,13 +8,14 @@ vi.mock('./services/api', () => ({
     fetchLogs: vi.fn(),
     fetchTimelineStats: vi.fn(),
     fetchSourceStats: vi.fn(),
+    setAuthToken: vi.fn(),
 }));
 
 describe('App Component', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         localStorage.setItem('isLoggedIn', 'true');
-        
+
         api.fetchLogs.mockResolvedValue([]);
         api.fetchTimelineStats.mockResolvedValue([]);
         api.fetchSourceStats.mockResolvedValue([]);
