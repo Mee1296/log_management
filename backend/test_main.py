@@ -1,6 +1,5 @@
 import pytest
-from backend.services.parser import parse_log, parse_syslog_text
-from datetime import datetime
+from services.parser import parse_log, parse_syslog_text
 
 # JSON-based logs
 @pytest.mark.parametrize("source, raw_input, expected_tenant", [
