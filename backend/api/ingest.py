@@ -11,7 +11,6 @@ def validate_tenant_access(user: User, tenant: str):
     if user.role != "admin" and user.tenant_access != tenant:
         raise HTTPException(status_code=403, detail="Access to this tenant is forbidden")
 
-# ... (GET endpoints remain same, skipping to ingest) ...
 
 @router.post("/ingest/{source_type}", dependencies=[Depends(verify_ingest_key)])
 async def ingest_logs(source_type: str, request: Request):
@@ -27,18 +26,13 @@ async def ingest_logs(source_type: str, request: Request):
     parsed_list = []
     
     for item in data:
-        # Tenant check per item? Or assume header? 
-        # Simulator sends tenant in body.
         tenant = item.get("tenant") or request.headers.get("X-Tenant-ID")
         if not tenant:
-            # Skip or fail? Let's skip valid items without tenant if strict, 
-            # but parser handles default.
             pass
 
         parsed = parse_log(item, source_type)
         parsed_list.append(parsed)
         
-        # ALERT LOGIC
         if parsed.get("severity", 0) >= 8:
             alert_payload = {
                 "timestamp": parsed.get("timestamp") or datetime.now(),

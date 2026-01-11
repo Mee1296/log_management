@@ -11,7 +11,8 @@ UDP_PORT = 514
 
 HEADERS = {
     "Content-Type": "application/json",
-    "X-API-KEY": "secret-key-123",
+    "X-API-KEY": "admin-key",
+    "INGEST_API_KEY_NAME": "admin-key",
     "X-Tenant-ID": "demo"
 }
 
@@ -42,6 +43,57 @@ def send_http_log():
     except Exception as e:
         print(f"[HTTP] Error: {e}")
 
+def display_error(resp):
+    if resp.status_code != 200:
+        print(f"[{resp.status_code}] {resp.text}")
+
+def send_http_log():
+    try:
+        log = generate_log()
+        resp = requests.post(f"{API_URL}/{log['source']}", json=log, headers=HEADERS)
+        print(f"[HTTP] Single: {resp.status_code}")
+        display_error(resp)
+    except Exception as e:
+        print(f"[HTTP] Error: {e}")
+
+def send_aws_log():
+    try:
+        log = {
+            "eventTime": datetime.datetime.now().isoformat(),
+            "eventName": "ConsoleLogin",
+            "userIdentity": {
+                "type": "IAMUser",
+                "userName": f"user-{random.randint(1,20)}",
+                "accountId": "123456789012"
+            },
+            "source": "aws",
+            "tenant": "demo",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": f"10.0.{random.randint(1,255)}.{random.randint(1,255)}"
+        }
+        # Send to /ingest/aws
+        resp = requests.post(f"{API_URL}/aws", json=log, headers=HEADERS)
+        print(f"[HTTP] AWS: {resp.status_code}")
+    except Exception as e:
+        print(f"[HTTP] AWS Error: {e}")
+
+def send_m365_log():
+    try:
+        log = {
+            "CreationTime": datetime.datetime.now().isoformat(),
+            "Operation": "UserLoggedIn",
+            "UserId": f"user-{random.randint(1,20)}@example.com",
+            "source": "m365",
+            "tenant": "demo", 
+            "Workload": "Exchange",
+            "ClientIP": f"192.168.{random.randint(1,255)}.{random.randint(1,255)}"
+        }
+        # Send to /ingest/m365
+        resp = requests.post(f"{API_URL}/m365", json=log, headers=HEADERS)
+        print(f"[HTTP] M365: {resp.status_code}")
+    except Exception as e:
+        print(f"[HTTP] M365 Error: {e}")
+
 def send_batch_log():
     try:
         batch = [generate_log() for _ in range(random.randint(2, 5))]
@@ -62,11 +114,18 @@ def send_udp_log():
 
 if __name__ == "__main__":
     print("Starting Traffic Simulator...")
-    while True:
+    count = 0;
+    while count < 100:
         send_http_log()
         if random.random() < 0.3:
             send_batch_log()
         if random.random() < 0.2:
             send_udp_log()
+        if random.random() < 0.2:
+            send_aws_log()
+        if random.random() < 0.2:
+            send_m365_log()
         
-        time.sleep(2)
+        time.sleep(0.5)
+        count += 1
+    print("Traffic Simulation Completed.")

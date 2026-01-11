@@ -90,6 +90,32 @@ def parse_syslog_text(raw_msg):
 def parse_log(raw_data, source_type):
     data = raw_data if isinstance(raw_data, dict) else json.loads(raw_data)
     
+    # Custom Parsing Logic
+    if source_type == "aws":
+        return LogSchema(
+            timestamp=data.get("eventTime") or datetime.datetime.now(),
+            tenant=data.get("tenant", "default"),
+            source="aws",
+            event_type=data.get("eventName"),
+            user_name=data.get("userIdentity", {}).get("userName"),
+            cloud_region=data.get("awsRegion"),
+            src_ip=data.get("sourceIPAddress"),
+            cloud_account_id=data.get("userIdentity", {}).get("accountId"),
+            raw_data=json.dumps(data)
+        ).model_dump()
+
+    if source_type == "m365":
+        return LogSchema(
+            timestamp=data.get("CreationTime") or datetime.datetime.now(),
+            tenant=data.get("tenant", "default"),
+            source="m365",
+            event_type=data.get("Operation"),
+            user_name=data.get("UserId"),
+            cloud_service=data.get("Workload"),
+            src_ip=data.get("ClientIP"),
+            raw_data=json.dumps(data)
+        ).model_dump()
+
     extracted = {
         "raw_data": json.dumps(data),
         "source": source_type,

@@ -23,8 +23,9 @@ The system follows a microservices-style architecture composed of Docker contain
    - **Role**: specific `JSONB` storage for normalized logs.
 
 4. **Services**
-   - **Simulator (`samples/simulator.py`)**: Generates traffic for testing.
+   - **Simulator (`samples/simulator.py`)**: Generates traffic (API, AWS, M365, Syslog) for testing.
    - **Retention Policy (`backend/db/retention_policy.py`)**: runs as a sidecar to clean old logs.
+   - **Alert Monitor (`backend/services/background_tasks.py`)**: Background task that aggregates logs every minute to detect threats (e.g., Brute Force).
 
 ## Security & RBAC
 The system implements strict access control:

@@ -113,6 +113,78 @@
                             ]
                         }
                     }
+                },
+                {
+                    "name": "Ingest AWS CloudTrail",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "secret-key-123",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"eventTime\": \"2023-10-27T10:00:00Z\",\n    \"eventName\": \"ConsoleLogin\",\n    \"userIdentity\": {\n        \"type\": \"IAMUser\",\n        \"userName\": \"admin\",\n        \"accountId\": \"123456789012\"\n    },\n    \"source\": \"aws\",\n    \"tenant\": \"demo\",\n    \"awsRegion\": \"us-east-1\",\n    \"sourceIPAddress\": \"1.2.3.4\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/v1/ingest/aws",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "v1",
+                                "ingest",
+                                "aws"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Ingest Microsoft 365",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "secret-key-123",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"CreationTime\": \"2023-10-27T10:00:00Z\",\n    \"Operation\": \"UserLoggedIn\",\n    \"UserId\": \"user@example.com\",\n    \"source\": \"m365\",\n    \"tenant\": \"demo\",\n    \"Workload\": \"Exchange\",\n    \"ClientIP\": \"1.2.3.4\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/v1/ingest/m365",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "v1",
+                                "ingest",
+                                "m365"
+                            ]
+                        }
+                    }
                 }
             ]
         },

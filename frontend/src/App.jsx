@@ -64,11 +64,13 @@ function App() {
     }, [searchTenant, isLoggedIn, userRole, userTenantAccess]);
 
     const handleLogin = (data) => {
-        const { token, role, tenant_access } = data;
+        const { token, role, tenant_access, tenant_id } = data;
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('authToken', token);
         localStorage.setItem('userRole', role);
         localStorage.setItem('userTenantAccess', tenant_access);
+        // Also store tenant_id if different, relying on tenant_access for now as they are same usually.
+        localStorage.setItem('userTenantId', tenant_id || tenant_access);
 
         setAuthToken(token);
         setUserRole(role);
@@ -76,9 +78,12 @@ function App() {
         setIsLoggedIn(true);
 
         // If viewer, auto-set tenant
-        if (role === 'viewer' && tenant_access !== '*') {
-            setTenant(tenant_access);
-            setSearchTenant(tenant_access);
+        if (role === 'viewer') {
+            const assignedTenant = tenant_id || tenant_access;
+            if (assignedTenant && assignedTenant !== '*') {
+                setTenant(assignedTenant);
+                setSearchTenant(assignedTenant);
+            }
         }
     };
 

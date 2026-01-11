@@ -98,6 +98,7 @@ async def login(creds: LoginRequest, request: Request):
             "status": "success", 
             "token": "admin-token", 
             "role": "admin", 
+            "tenant_id": "*",
             "tenant_access": "*"
         }
 
@@ -110,6 +111,7 @@ async def login(creds: LoginRequest, request: Request):
             "status": "success", 
             "token": "viewer-token", 
             "role": "viewer", 
+            "tenant_id": VIEWER_TENANT,
             "tenant_access": VIEWER_TENANT
         }
 

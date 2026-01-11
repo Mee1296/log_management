@@ -1,8 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api import auth, ingest, alerts
+import asyncio
+from services.background_tasks import monitor_alerts
 
 app = FastAPI()
+
+# Background Task
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(monitor_alerts())
 
 # CORS Middleware
 app.add_middleware(
