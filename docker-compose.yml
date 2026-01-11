@@ -16,6 +16,7 @@ services:
       - VIEWER_USER=${VIEWER_USER}
       - VIEWER_PASS=${VIEWER_PASS}
       - INGEST_API_KEY_NAME=${INGEST_API_KEY_NAME}
+    command: sh -c "while ! nc -z db 5432; do sleep 1; echo 'Waiting for DB...'; done; uvicorn main:app --host 0.0.0.0 --port 8000"
     ports:
       - "514:514/udp" # Syslog UDP
       - "8000:8000"

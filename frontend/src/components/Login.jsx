@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Lock, User, AlertTriangle, ShieldAlert } from 'lucide-react';
 
+import { setAuthToken } from '../services/api'; 
+
 function Login({ onLogin }) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -18,21 +20,26 @@ function Login({ onLogin }) {
         setIsLoading(true);
 
         try {
-            const response = await axios.post('http://localhost:8000/api/v1/login', {
+            const response = await axios.post('/api/v1/login', {
                 username,
                 password
             });
 
             if (response.data.status === 'success') {
+                if (response.data.token) {
+                    setAuthToken(response.data.token);
+                }
+                
                 onLogin(response.data);
             }
         } catch (err) {
+            console.error("Login error:", err);
             if (err.response && err.response.status === 403) {
                 // Blocked!
                 setBlockMessage(err.response.data.detail);
                 setShowBlockAlert(true);
             } else {
-                setError(err.response?.data?.detail || "Connection failed");
+                setError(err.response?.data?.detail || "Connection failed. Please check if backend is running.");
             }
         } finally {
             setIsLoading(false);

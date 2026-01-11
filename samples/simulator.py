@@ -12,7 +12,6 @@ UDP_PORT = 514
 HEADERS = {
     "Content-Type": "application/json",
     "X-API-KEY": "admin-key",
-    "INGEST_API_KEY_NAME": "admin-key",
     "X-Tenant-ID": "demo"
 }
 

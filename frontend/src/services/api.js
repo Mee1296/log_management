@@ -1,5 +1,6 @@
 import axios from 'axios';
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+
+const API_BASE_URL = '/api/v1'; 
 
 let authToken = null;
 
@@ -8,10 +9,13 @@ export const setAuthToken = (token) => {
 };
 
 const getHeaders = () => {
+    const headers = {
+        'Content-Type': 'application/json',
+    };
     if (authToken) {
-        return { Authorization: `Bearer ${authToken}` };
+        headers['Authorization'] = `Bearer ${authToken}`;
     }
-    return {};
+    return headers;
 };
 
 export const fetchLogs = async (tenant, params = {}) => {
@@ -60,5 +64,16 @@ export const fetchAlerts = async () => {
     } catch (error) {
         console.error("Error fetching alerts:", error);
         return [];
+    }
+};
+
+export const loginUser = async (credentials) => {
+    try {
+        const response = await axios.post(`${API_BASE_URL}/login`, credentials, {
+            headers: getHeaders()
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
     }
 };

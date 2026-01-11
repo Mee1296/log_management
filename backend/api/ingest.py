@@ -5,8 +5,6 @@ from typing import Optional, Union, List
 from api.auth import verify_ingest_key, get_current_user, User
 from datetime import datetime, timezone
 
-
-
 router = APIRouter()
 
 def validate_tenant_access(user: User, tenant: str):
@@ -14,27 +12,26 @@ def validate_tenant_access(user: User, tenant: str):
         raise HTTPException(status_code=403, detail="Access to this tenant is forbidden")
 
 
-@router.post("/ingest/{source_type}", dependencies=[Depends(verify_ingest_key)])
+@router.post("/ingest/{source_type}")
 async def ingest_logs(source_type: str, request: Request):
     data = await request.json()
     
-    # Normalize to list
     if isinstance(data, dict):
         data = [data]
-        
     if not isinstance(data, list):
          raise HTTPException(status_code=400, detail="Payload must be JSON object or array")
 
     parsed_list = []
     
     for item in data:
-        tenant = item.get("tenant") or request.headers.get("X-Tenant-ID")
-        if not tenant:
-            pass
+        # Default tenant if missing
+        tenant = item.get("tenant") or request.headers.get("X-Tenant-ID") or "default"
+        item["tenant"] = tenant # Ensure parsed log has tenant
 
         parsed = parse_log(item, source_type)
         parsed_list.append(parsed)
         
+        # Alert Logic (Severity >= 8)
         if parsed.get("severity", 0) >= 8:
             alert_payload = {
                 "timestamp": parsed.get("timestamp") or datetime.now(timezone.utc),

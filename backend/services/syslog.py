@@ -1,7 +1,6 @@
 import socket
-from parser import parse_syslog_text
+from services.parser import parse_syslog_text
 from db.repository import save_to_db
-import threading
 
 def syslog_udp_server():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -20,10 +19,3 @@ def syslog_udp_server():
             save_to_db(parsed_data)
         except Exception as e:
             print(f"UDP Processing Error: {e}")    
-
-try:
-    udp_thread = threading.Thread(target=syslog_udp_server, daemon=True)
-    udp_thread.start()
-    print("Started UDP Syslog server thread.")
-except Exception as e:
-    print(f"Failed to start UDP server thread: {e}")
