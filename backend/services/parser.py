@@ -1,12 +1,12 @@
 import re
-import datetime
+from datetime import datetime, timezone
 import json
 from pydantic import BaseModel, Field
 from typing import Optional
 from typing import Any
 
 class LogSchema(BaseModel):
-    timestamp: datetime.datetime
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     tenant: str = "default"
     source: str
     vendor: Optional[str] = None
@@ -36,10 +36,26 @@ class LogSchema(BaseModel):
     cloud_service: Optional[str] = None
     raw_data: Any
 
+def normalize_timestamp(value) -> datetime:
+    if value is None:
+        return datetime.now(timezone.utc)
+
+    if isinstance(value, datetime):
+        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+
+    if isinstance(value, str):
+        try:
+            dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+        except ValueError:
+            pass
+
+    return datetime.now(timezone.utc)
+
 def parse_syslog_text(raw_msg):
     extracted = {
         "raw_data": {"full_message": raw_msg}, 
-        "timestamp": datetime.datetime.now(),
+        "timestamp": normalize_timestamp(None),
         "tenant": "internal_system" 
     }
 
@@ -93,7 +109,7 @@ def parse_log(raw_data, source_type):
     # Custom Parsing Logic
     if source_type == "aws":
         return LogSchema(
-            timestamp=data.get("eventTime") or datetime.datetime.now(),
+            timestamp=normalize_timestamp(data.get("eventTime")),
             tenant=data.get("tenant", "default"),
             source="aws",
             event_type=data.get("eventName"),
@@ -106,7 +122,7 @@ def parse_log(raw_data, source_type):
 
     if source_type == "m365":
         return LogSchema(
-            timestamp=data.get("CreationTime") or datetime.datetime.now(),
+            timestamp=normalize_timestamp(data.get("CreationTime")),
             tenant=data.get("tenant", "default"),
             source="m365",
             event_type=data.get("Operation"),
@@ -119,7 +135,7 @@ def parse_log(raw_data, source_type):
     extracted = {
         "raw_data": json.dumps(data),
         "source": source_type,
-        "timestamp": data.get("@timestamp") or datetime.datetime.now(),
+        "timestamp": normalize_timestamp(data.get("@timestamp")),
         "tenant": data.get("tenant", "default"),
         "severity": data.get("severity", 5),
         "action": data.get("action"),
@@ -141,7 +157,7 @@ def parse_log(raw_data, source_type):
     except Exception as e:
         print(f"Validation Error for {source_type}: {e}")
         return LogSchema(
-            timestamp=datetime.datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             source=source_type,
             raw_data=str(raw_data)
         ).model_dump()

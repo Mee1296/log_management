@@ -1,6 +1,5 @@
 import os
 import psycopg2
-from services.parser import parse_log, parse_syslog_text
 from psycopg2.extras import execute_values
 import json
 

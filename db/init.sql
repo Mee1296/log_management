@@ -35,7 +35,7 @@ CREATE TABLE logs (
 
 CREATE TABLE alerts (
     id SERIAL PRIMARY KEY,
-    timestamp TIMESTAMP,
+    timestamp TIMESTAMPTZ NOT NULL,
     severity INT,
     message TEXT,
     source TEXT,

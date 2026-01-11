@@ -1,7 +1,7 @@
 import os
 import psycopg2
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 DB_URL = os.getenv("DATABASE_URL")
 
@@ -11,7 +11,7 @@ def cleanup():
             conn = psycopg2.connect(DB_URL)
             cur = conn.cursor()
             cur.execute("DELETE FROM logs WHERE timestamp < NOW() - INTERVAL '7 days';")
-            print(f"[{datetime.now()}] Deleted {cur.rowcount} old logs.")
+            print(f"[{datetime.now(timezone.utc).isoformat()}] Deleted {cur.rowcount} old logs.")
             conn.commit()
             cur.close()
             conn.close()

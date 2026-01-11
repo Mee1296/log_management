@@ -3,7 +3,9 @@ from services.parser import parse_log
 from db.repository import save_to_db, fetch_from_db, save_alert
 from typing import Optional, Union, List
 from api.auth import verify_ingest_key, get_current_user, User
-from datetime import datetime
+from datetime import datetime, timezone
+
+
 
 router = APIRouter()
 
@@ -35,7 +37,7 @@ async def ingest_logs(source_type: str, request: Request):
         
         if parsed.get("severity", 0) >= 8:
             alert_payload = {
-                "timestamp": parsed.get("timestamp") or datetime.now(),
+                "timestamp": parsed.get("timestamp") or datetime.now(timezone.utc),
                 "severity": parsed.get("severity"),
                 "message": str(parsed.get("event_type") or parsed.get("message") or "High Severity Event"),
                 "source": parsed.get("source"),

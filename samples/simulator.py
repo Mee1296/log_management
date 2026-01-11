@@ -1,8 +1,8 @@
 import requests
 import json
+from datetime import datetime, timezone
 import time
 import random
-import datetime
 import socket
 
 API_URL = "http://localhost:8000/api/v1/ingest"
@@ -18,14 +18,15 @@ HEADERS = {
 
 SOURCES = ["api", "aws", "crowdstrike", "firewall", "m365"]
 EVENT_TYPES = ["login_success", "login_failed", "file_access", "network_connection", "process_start"]
+TENANT = ["demoA", "demoB", "demoC"]
 
 def generate_log(source=None):
     source = source or random.choice(SOURCES)
     severity = random.choices([1, 3, 5, 8, 9], weights=[50, 30, 10, 5, 5])[0]
     
     log = {
-        "timestamp": datetime.datetime.now().isoformat(),
-        "tenant": "demo",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "tenant": TENANT[random.randint(0,2)],
         "source": source,
         "severity": severity,
         "event_type": random.choice(EVENT_TYPES),
@@ -59,7 +60,7 @@ def send_http_log():
 def send_aws_log():
     try:
         log = {
-            "eventTime": datetime.datetime.now().isoformat(),
+            "eventTime": datetime.now(timezone.utc).isoformat(),
             "eventName": "ConsoleLogin",
             "userIdentity": {
                 "type": "IAMUser",
@@ -80,7 +81,7 @@ def send_aws_log():
 def send_m365_log():
     try:
         log = {
-            "CreationTime": datetime.datetime.now().isoformat(),
+            "CreationTime": datetime.now(timezone.utc).isoformat(),
             "Operation": "UserLoggedIn",
             "UserId": f"user-{random.randint(1,20)}@example.com",
             "source": "m365",
@@ -106,7 +107,7 @@ def send_batch_log():
 def send_udp_log():
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        msg = f"<14>1 {datetime.datetime.now().isoformat()} host-udp app - - - This is a syslog message severity=5"
+        msg = f"<14>1 {datetime.now(timezone.utc).isoformat()} host-udp app - - - This is a syslog message severity=5"
         sock.sendto(msg.encode(), (UDP_IP, UDP_PORT))
         print(f"[UDP] Sent")
     except Exception as e:
@@ -126,6 +127,6 @@ if __name__ == "__main__":
         if random.random() < 0.2:
             send_m365_log()
         
-        time.sleep(0.5)
+        # time.sleep(0.1)
         count += 1
     print("Traffic Simulation Completed.")

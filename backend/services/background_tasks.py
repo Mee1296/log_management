@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from db.repository import fetch_from_db, save_alert
 
 async def monitor_alerts():
@@ -22,7 +22,7 @@ async def monitor_alerts():
                 count = res.get('count')
                 
                 alert = {
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "severity": 8,
                     "message": f"High rate of login failures detected from {src_ip} ({count} attempts)",
                     "source": "system_monitor",

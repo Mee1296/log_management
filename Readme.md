@@ -8,7 +8,7 @@ The system runs as a containerized appliance managed by Docker Compose.
 
 ```mermaid
 graph TD
-    Client[User Browser] -- HTTP :80 --> Nginx
+    Client[User Browser] -- HTTPS :443 --> Nginx
     Source[Log Source] -- UDP :514 --> SyslogPort
 
     subgraph "Docker Network"

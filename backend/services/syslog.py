@@ -1,6 +1,6 @@
 import socket
 from parser import parse_syslog_text
-from db import save_to_db
+from db.repository import save_to_db
 import threading
 
 def syslog_udp_server():
