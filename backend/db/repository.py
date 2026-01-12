@@ -13,25 +13,27 @@ def save_to_db(data):
         conn = psycopg2.connect(DB_URL)
         cur = conn.cursor()
         
-        # Normalize to list
-        if not isinstance(data, list):
-            data = [data]
-            
-        if not data:
-            return
+        # กำหนดคอลัมน์มาตรฐานตาม Schema ใน db/init.sql
+        standard_columns = [
+            'timestamp', 'tenant', 'source', 'vendor', 'product', 'severity', 
+            'action', 'event_type', 'event_subtype', 'src_ip', 'dst_ip', 
+            'src_port', 'dst_port', 'protocol', 'message', 'user_name', 
+            'host', 'process', 'url', 'http_method', 'status_code', 
+            'cloud_account_id', 'cloud_region', 'cloud_service', 'raw_data'
+        ]
 
-        # Prepare payload
-        # Ensure json dumping for raw_data if needed
+        values = []
         for item in data:
-            if isinstance(item.get("raw_data"), dict):
-                item["raw_data"] = json.dumps(item["raw_data"])
+            # ตรวจสอบว่า raw_data เป็น dict หรือไม่ ถ้าใช่ค่อย dumps
+            raw = item.get("raw_data")
+            if isinstance(raw, (dict, list)):
+                raw = json.dumps(raw)
+            
+            # สร้าง tuple ของข้อมูลตามลำดับ standard_columns เป๊ะๆ
+            val_tuple = tuple(item.get(col) for col in standard_columns)
+            values.append(val_tuple)
         
-        # Assume all items have same keys as first one
-        columns = list(data[0].keys())
-        # Create list of tuples for values
-        values = [[item.get(col) for col in columns] for item in data]
-        
-        insert_query = f"INSERT INTO logs ({', '.join(columns)}) VALUES %s"
+        insert_query = f"INSERT INTO logs ({', '.join(standard_columns)}) VALUES %s"
         
         execute_values(cur, insert_query, values)
         

@@ -5,8 +5,8 @@ import time
 import random
 import socket
 
-API_URL = "http://localhost:8000/api/v1/ingest"
-UDP_IP = "127.0.0.1"
+API_URL = "https://backend-production-022e.up.railway.app/api/v1/ingest"
+UDP_IP = "10.64.0.2"
 UDP_PORT = 514
 
 HEADERS = {
@@ -40,19 +40,6 @@ def send_http_log():
         log = generate_log()
         resp = requests.post(f"{API_URL}/{log['source']}", json=log, headers=HEADERS)
         print(f"[HTTP] Single: {resp.status_code}")
-    except Exception as e:
-        print(f"[HTTP] Error: {e}")
-
-def display_error(resp):
-    if resp.status_code != 200:
-        print(f"[{resp.status_code}] {resp.text}")
-
-def send_http_log():
-    try:
-        log = generate_log()
-        resp = requests.post(f"{API_URL}/{log['source']}", json=log, headers=HEADERS)
-        print(f"[HTTP] Single: {resp.status_code}")
-        display_error(resp)
     except Exception as e:
         print(f"[HTTP] Error: {e}")
 
