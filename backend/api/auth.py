@@ -109,7 +109,6 @@ async def login(creds: LoginRequest, request: Request):
     if len(failed_logins[ip]) >= MAX_FAILURES: # ใช้ >=
         blocked_ips[ip] = now + timedelta(hours=BLOCK_HOURS)
         
-        # --- NEW: บันทึก Alert ลง DB เพื่อให้ Admin เห็นใน Dashboard ---
         print(f"[SECURITY] Blocking IP {ip} due to brute force.")
         try:
             save_alert({
