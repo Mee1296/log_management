@@ -5,7 +5,6 @@ import { Lock, User, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { setAuthToken } from '../services/api'; 
 
 const BASE_DOMAIN = import.meta.env.VITE_API_URL || ''; 
-const API_BASE_URL = `${BASE_DOMAIN}/api/v1`;
 
 function Login({ onLogin }) {
     const [username, setUsername] = useState('');
