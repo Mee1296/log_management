@@ -20,7 +20,7 @@ const getHeaders = () => {
 
 export const fetchLogs = async (tenant, params = {}) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/api/v1/logs`, {
+        const response = await axios.get(`${API_BASE_URL}/logs`, {
             params: { tenant, ...params },
             headers: getHeaders()
         });
@@ -33,7 +33,7 @@ export const fetchLogs = async (tenant, params = {}) => {
 
 export const fetchSourceStats = async (tenant) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/api/v1/stats/sources/${tenant}`, {
+        const response = await axios.get(`${API_BASE_URL}/stats/sources/${tenant}`, {
             headers: getHeaders()
         });
         return response.data;
@@ -45,7 +45,7 @@ export const fetchSourceStats = async (tenant) => {
 
 export const fetchTimelineStats = async (tenant) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/api/v1/stats/timeline/${tenant}`, {
+        const response = await axios.get(`${API_BASE_URL}/stats/timeline/${tenant}`, {
             headers: getHeaders()
         });
         return response.data;
@@ -57,7 +57,7 @@ export const fetchTimelineStats = async (tenant) => {
 
 export const fetchAlerts = async () => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/api/v1/alerts`, {
+        const response = await axios.get(`${API_BASE_URL}/alerts`, {
             headers: getHeaders()
         });
         return response.data;
@@ -69,7 +69,7 @@ export const fetchAlerts = async () => {
 
 export const loginUser = async (credentials) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/login`, credentials, {
+        const response = await axios.post(`${API_BASE_URL}/login`, credentials, {
             headers: getHeaders()
         });
         return response.data;
