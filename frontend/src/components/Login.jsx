@@ -4,6 +4,8 @@ import { Lock, User, AlertTriangle, ShieldAlert } from 'lucide-react';
 
 import { setAuthToken } from '../services/api'; 
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1'; 
+
 function Login({ onLogin }) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -20,7 +22,7 @@ function Login({ onLogin }) {
         setIsLoading(true);
 
         try {
-            const response = await axios.post('/api/v1/login', {
+            const response = await axios.post(`${API_BASE_URL}/login`, {
                 username,
                 password
             });
