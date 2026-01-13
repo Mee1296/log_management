@@ -102,7 +102,7 @@ function App() {
 
     const handleSearch = (e) => {
         e.preventDefault();
-        if (tenant.trim()) setSearchTenant(tenant);
+        setSearchTenant(tenant);
     };
 
     if (!isLoggedIn) {

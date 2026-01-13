@@ -11,7 +11,7 @@ services:
     build: ./backend
     environment:
       - DATABASE_URL=${DATABASE_URL}
-      - DEMO_VIEWERS_JSON=${DEMO_VIEWERS_JSON}
+      - VIEWERS_JSON=${VIEWERS_JSON}
       - INGEST_API_KEY_NAME=${INGEST_API_KEY_NAME}
     command: sh -c "while ! nc -z db 5432; do sleep 1; echo 'Waiting for DB...'; done; uvicorn main:app --host 0.0.0.0 --port 8000"
     ports:
