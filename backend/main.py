@@ -5,7 +5,7 @@ load_dotenv()
 
 import threading
 from db.retention_policy import cleanup
-from fastapi import FastAPI, Request, HTTPException, Query, Depends, Security
+from fastapi import FastAPI, HTTPException, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security.api_key import APIKeyHeader
 from services.syslog import syslog_udp_server

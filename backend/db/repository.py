@@ -13,7 +13,6 @@ def save_to_db(data):
         conn = psycopg2.connect(DB_URL)
         cur = conn.cursor()
         
-        # กำหนดคอลัมน์มาตรฐานตาม Schema ใน db/init.sql
         standard_columns = [
             'timestamp', 'tenant', 'source', 'vendor', 'product', 'severity', 
             'action', 'event_id', 'event_type', 'event_subtype', 'src_ip', 'dst_ip', 
@@ -24,13 +23,13 @@ def save_to_db(data):
 
         values = []
         for item in data:
-            # ตรวจสอบว่า raw_data เป็น dict หรือไม่ ถ้าใช่ค่อย dumps
-            raw = item.get("raw_data")
-            if isinstance(raw, (dict, list)):
-                raw = json.dumps(raw)
+            current_item = item.copy()
             
-            # สร้าง tuple ของข้อมูลตามลำดับ standard_columns เป๊ะๆ
-            val_tuple = tuple(item.get(col) for col in standard_columns)
+            raw = current_item.get("raw_data")
+            if isinstance(raw, (dict, list)):
+                current_item["raw_data"] = json.dumps(raw)
+            
+            val_tuple = tuple(current_item.get(col) for col in standard_columns)
             values.append(val_tuple)
         
         insert_query = f"INSERT INTO logs ({', '.join(standard_columns)}) VALUES %s"

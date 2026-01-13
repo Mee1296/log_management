@@ -17,7 +17,7 @@ if dev_status != "development":
     UDP_IP = "10.64.0.2"
 else :
     API_URL = "https://localhost/api/v1/ingest"
-    UDP_IP =  "127.0.1"
+    UDP_IP =  "127.0.0.1"
 UDP_PORT = 514
 
 HEADERS = {

@@ -16,6 +16,6 @@ def syslog_udp_server():
             parsed_data = parse_syslog_text(raw_msg)
             if not parsed_data.get("tenant"):
                 parsed_data["tenant"] = "default"            
-            save_to_db(parsed_data)
+            save_to_db([parsed_data])
         except Exception as e:
             print(f"UDP Processing Error: {e}")    
