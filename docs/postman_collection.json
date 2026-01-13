@@ -9,13 +9,42 @@
             "name": "Auth",
             "item": [
                 {
-                    "name": "Login",
+                    "name": "Login Admin",
                     "request": {
                         "method": "POST",
                         "header": [],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin\"\n}",
+                            "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/v1/login",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "v1",
+                                "login"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Login Viewer A",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"username\": \"viewerA\",\n    \"password\": \"A123\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -55,7 +84,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"tenant\": \"demo\",\n    \"source\": \"api\",\n    \"message\": \"Test log\",\n    \"severity\": 5\n}",
+                            "raw": "{\n    \"tenant\": \"demoA\",\n    \"source\": \"api\",\n    \"message\": \"Test log for Demo A\",\n    \"severity\": 5\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -79,7 +108,7 @@
                     }
                 },
                 {
-                    "name": "Ingest Batch (High Severity)",
+                    "name": "Ingest Batch (Mixed Tenants)",
                     "request": {
                         "method": "POST",
                         "header": [
@@ -91,7 +120,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "[\n    {\n        \"tenant\": \"demo\",\n        \"source\": \"batch\",\n        \"message\": \"Normal log\",\n        \"severity\": 1\n    },\n    {\n        \"tenant\": \"demo\",\n        \"source\": \"batch\",\n        \"message\": \"CRITICAL ERROR\",\n        \"severity\": 9\n    }\n]",
+                            "raw": "[\n    {\n        \"tenant\": \"demoA\",\n        \"source\": \"batch\",\n        \"message\": \"Log for A\",\n        \"severity\": 1\n    },\n    {\n        \"tenant\": \"demoB\",\n        \"source\": \"batch\",\n        \"message\": \"Log for B\",\n        \"severity\": 1\n    }\n]",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -113,78 +142,6 @@
                             ]
                         }
                     }
-                },
-                {
-                    "name": "Ingest AWS CloudTrail",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "X-API-KEY",
-                                "value": "secret-key-123",
-                                "type": "text"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"eventTime\": \"2023-10-27T10:00:00Z\",\n    \"eventName\": \"ConsoleLogin\",\n    \"userIdentity\": {\n        \"type\": \"IAMUser\",\n        \"userName\": \"admin\",\n        \"accountId\": \"123456789012\"\n    },\n    \"source\": \"aws\",\n    \"tenant\": \"demo\",\n    \"awsRegion\": \"us-east-1\",\n    \"sourceIPAddress\": \"1.2.3.4\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "http://localhost:8000/api/v1/ingest/aws",
-                            "protocol": "http",
-                            "host": [
-                                "localhost"
-                            ],
-                            "port": "8000",
-                            "path": [
-                                "api",
-                                "v1",
-                                "ingest",
-                                "aws"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Ingest Microsoft 365",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "X-API-KEY",
-                                "value": "secret-key-123",
-                                "type": "text"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"CreationTime\": \"2023-10-27T10:00:00Z\",\n    \"Operation\": \"UserLoggedIn\",\n    \"UserId\": \"user@example.com\",\n    \"source\": \"m365\",\n    \"tenant\": \"demo\",\n    \"Workload\": \"Exchange\",\n    \"ClientIP\": \"1.2.3.4\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "http://localhost:8000/api/v1/ingest/m365",
-                            "protocol": "http",
-                            "host": [
-                                "localhost"
-                            ],
-                            "port": "8000",
-                            "path": [
-                                "api",
-                                "v1",
-                                "ingest",
-                                "m365"
-                            ]
-                        }
-                    }
                 }
             ]
         },
@@ -192,7 +149,7 @@
             "name": "Search & Stats",
             "item": [
                 {
-                    "name": "Get Logs (Admin)",
+                    "name": "Get Logs (Admin - All)",
                     "request": {
                         "method": "GET",
                         "header": [
@@ -203,7 +160,89 @@
                             }
                         ],
                         "url": {
-                            "raw": "http://localhost:8000/api/v1/logs?tenant=demo",
+                            "raw": "http://localhost:8000/api/v1/logs",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "v1",
+                                "logs"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Logs (Viewer A - Auto Tenant)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Only demoA logs returned\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.every(log => log.tenant === 'demoA')).to.be.true;",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer viewerA-token",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/api/v1/logs",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "v1",
+                                "logs"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Logs (Viewer A - Tenant B Forbidden)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 403\", function () {",
+                                    "    pm.response.to.have.status(403);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer viewerA-token",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/api/v1/logs?tenant=demoB",
                             "protocol": "http",
                             "host": [
                                 "localhost"
@@ -217,25 +256,25 @@
                             "query": [
                                 {
                                     "key": "tenant",
-                                    "value": "demo"
+                                    "value": "demoB"
                                 }
                             ]
                         }
                     }
                 },
                 {
-                    "name": "Get Alerts",
+                    "name": "Get Source Stats (Viewer A - Secured)",
                     "request": {
                         "method": "GET",
                         "header": [
                             {
                                 "key": "Authorization",
-                                "value": "Bearer admin-token",
+                                "value": "Bearer viewerA-token",
                                 "type": "text"
                             }
                         ],
                         "url": {
-                            "raw": "http://localhost:8000/api/v1/alerts",
+                            "raw": "http://localhost:8000/api/v1/stats/sources",
                             "protocol": "http",
                             "host": [
                                 "localhost"
@@ -244,7 +283,8 @@
                             "path": [
                                 "api",
                                 "v1",
-                                "alerts"
+                                "stats",
+                                "sources"
                             ]
                         }
                     }

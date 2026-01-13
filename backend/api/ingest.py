@@ -30,9 +30,9 @@ async def ingest_logs(source_type: str, request: Request):
 
         parsed = parse_log(item, source_type)
         parsed_list.append(parsed)
-        
-        # Alert Logic (Severity >= 8)
-        if parsed.get("severity", 0) >= 8:
+
+        # Alert Logic (Severity >= 7)
+        if parsed.get("severity", 0) >= 7:
             alert_payload = {
                 "timestamp": parsed.get("timestamp") or datetime.now(timezone.utc),
                 "severity": parsed.get("severity"),

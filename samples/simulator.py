@@ -10,7 +10,7 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-dev_status = os.getenv("STATUS", "development")
+dev_status = os.getenv("STATUS", "deployment")
 
 if dev_status != "development":
     API_URL = "https://backend-production-022e.up.railway.app/api/v1/ingest"

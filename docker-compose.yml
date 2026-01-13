@@ -32,13 +32,3 @@ services:
       - "443:443"
     depends_on:
       - backend
-
-  log-cleaner:
-    build: ./backend
-    command: python db/retention_policy.py
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - PYTHONPATH=/app
-    depends_on:
-      - db
-    restart: always

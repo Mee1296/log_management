@@ -1,4 +1,8 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import threading
 from db.retention_policy import cleanup
 from fastapi import FastAPI, Request, HTTPException, Query, Depends, Security
@@ -7,10 +11,7 @@ from fastapi.security.api_key import APIKeyHeader
 from services.syslog import syslog_udp_server
 from api import ingest, auth, alerts
 from services.background_tasks import monitor_alerts
-from dotenv import load_dotenv
 import asyncio
-
-load_dotenv()
 
 app = FastAPI()
 
@@ -29,7 +30,7 @@ app.add_middleware(
 API_KEY_NAME = os.getenv("INGEST_API_KEY_NAME", "X-API-KEY")
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
-api_keys_str = os.getenv("INGEST_API_KEYS", "")
+api_keys_str = os.getenv("INGEST_API_KEYS", "secret-key-123")
 VALID_API_KEYS = [key.strip() for key in api_keys_str.split(",") if key.strip()]
 
 async def verify_ingest_key(api_key: str = Security(api_key_header)):

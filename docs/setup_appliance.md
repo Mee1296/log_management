@@ -12,7 +12,7 @@ This guide describes how to deploy the Log Management System as a self-contained
 
 1. **Clone the Repository**
    ```bash
-   git clone <repo_url>
+   git clone https://github.com/Mee1296/log_management
    cd log_management
    ```
 
@@ -26,8 +26,8 @@ This guide describes how to deploy the Log Management System as a self-contained
    ADMIN_USER=admin
    ADMIN_PASS=<strong_password>
    
-   VIEWER_USER=viewer
-   VIEWER_PASS=viewer
+   VIEWERS_JSON='{"viewerA": {"password": "A123", "tenant": "demoA"},"viewerB": {"password": "B123", "tenant": "demoB"},      "viewerC": {"password": "C123", "tenant": "demoC"}}'
+
    
    INGEST_API_KEY_NAME=X-API-KEY
    DATABASE_URL=postgresql://log_user:<strong_password>@db:5432/logs_db
@@ -39,11 +39,11 @@ This guide describes how to deploy the Log Management System as a self-contained
    ```
 
 ## Verification
-- **Dashboard**: Open `http://<server-ip>`
-- **Ingestion (Syslog)**: Send UDP logs to `<server-ip>:514`
-- **Ingestion (API)**: POST to `http://<server-ip>/api/v1/ingest`
+- **Dashboard**: Open `http://localhost`
+- **Ingestion (Syslog)**: Send UDP logs to `localhost:514`
+- **Ingestion (API)**: POST to `http://localhost/api/v1/ingest`
 
 ## Maintenance
 - **Logs**: `docker-compose logs -f`
-- **Update**: `git pull && docker-compose up -d --build`
+- **Update**: `git pull && docker-compose up --build -d`
 - **Backup**: Backup the `postgres_data` volume.
