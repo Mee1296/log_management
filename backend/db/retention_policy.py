@@ -18,6 +18,7 @@ def cleanup():
         except Exception as e:
             print(f"Cleanup Error: {e}")
         
+        print("Cleanup completed. Next run in 24 hours.")
         # run every 24 hours
         time.sleep(86400)
 

@@ -141,3 +141,14 @@ async def get_severity_trend(tenant: str, user: User = Depends(get_current_user)
     """
     return fetch_from_db(query, (tenant,))
 
+@router.get("/tenants")
+async def get_tenants(user: User = Depends(get_current_user)):
+    if user.role != 'admin':
+         # Viewer sees only their tenant
+        return [user.tenant_access]
+    
+    query = "SELECT DISTINCT tenant FROM logs ORDER BY tenant"
+    rows = fetch_from_db(query, ())
+    return [r["tenant"] for r in rows if r["tenant"]]
+
+

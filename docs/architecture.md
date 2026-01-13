@@ -53,8 +53,8 @@ Headers: `Authorization: Bearer <INGEST_KEY>`
 ## How to Run
 1. **Secrets**: Ensure `.env` exists with `POSTGRES_PASSWORD`, `ADMIN_USER`, etc.
 2. **Start**: `docker-compose up -d --build`
-3. **Access**: `http://localhost:80`
+3. **Access**: `http://localhost:`
 
 ## Testing
-- **Frontend**: `npm test` (Vitest)
+- **Frontend**: `cd \frontend -> npm test` (Vitest)
 - **Backend**: `pytest` (API tests)

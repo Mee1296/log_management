@@ -57,14 +57,27 @@ export const fetchTimelineStats = async (tenant) => {
     }
 };
 
-export const fetchAlerts = async () => {
+export const fetchAlerts = async (params = {}) => {
     try {
         const response = await axios.get(`${API_BASE_URL}/alerts`, {
+            params,
             headers: getHeaders()
         });
         return response.data;
     } catch (error) {
         console.error("Error fetching alerts:", error);
+        return [];
+    }
+};
+
+export const fetchTenants = async () => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/tenants`, {
+            headers: getHeaders()
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching tenants:", error);
         return [];
     }
 };

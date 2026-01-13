@@ -69,3 +69,5 @@ pytest_cache/
 tests/
 
 *.pdf
+
+certs/

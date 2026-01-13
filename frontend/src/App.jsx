@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchLogs, fetchTimelineStats, fetchSourceStats, fetchAlerts, setAuthToken } from './services/api';
+import { fetchLogs, fetchTimelineStats, fetchSourceStats, fetchAlerts, fetchTenants, setAuthToken } from './services/api';
 import SummaryCard from './components/SummaryCard';
 import LogTable from './components/LogTable';
 import LogChart from './components/LogChart';
@@ -19,6 +19,7 @@ function App() {
     const [timeline, setTimeline] = useState([]);
     const [sourceStats, setSourceStats] = useState([]);
     const [alerts, setAlerts] = useState([]);
+    const [availableTenants, setAvailableTenants] = useState([]);
 
     const [isInitialLoading, setIsInitialLoading] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -56,6 +57,10 @@ function App() {
         if (userRole === 'viewer' && userTenantAccess !== '*') {
             setSearchTenant(userTenantAccess);
             setTenant(userTenantAccess);
+        }
+
+        if (userRole === 'admin') {
+            fetchTenants().then(setAvailableTenants);
         }
 
         executeFetch(searchTenant, false);
@@ -169,13 +174,28 @@ function App() {
                                 <form onSubmit={handleSearch} className="flex gap-4">
                                     <div className="relative flex-grow">
                                         <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-500" />
-                                        <input
-                                            type="text"
-                                            className="block w-full pl-10 pr-3 py-3 border border-gray-700 rounded-md bg-gray-950 text-gray-300 placeholder-gray-600 focus:outline-none focus:border-cyan-500 font-mono disabled:opacity-50 disabled:cursor-not-allowed"
-                                            placeholder="Filter by Tenant ID..."
-                                            value={tenant}
-                                            onChange={(e) => setTenant(e.target.value)}
-                                        />
+                                        {userRole === 'admin' ? (
+                                            <select
+                                                className="block w-full pl-10 pr-3 py-3 border border-gray-700 rounded-md bg-gray-950 text-gray-300 focus:outline-none focus:border-cyan-500 font-mono appearance-none"
+                                                value={tenant}
+                                                onChange={(e) => setTenant(e.target.value)}
+                                            >
+                                                <option value="">All Tenants</option>
+                                                {availableTenants.map(t => (
+                                                    <option key={t} value={t}>{t}</option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                className="block w-full pl-10 pr-3 py-3 border border-gray-700 rounded-md bg-gray-950 text-gray-300 placeholder-gray-600 focus:outline-none focus:border-cyan-500 font-mono disabled:opacity-50 disabled:cursor-not-allowed"
+                                                placeholder="Filter by Tenant ID..."
+                                                value={tenant}
+                                                onChange={(e) => setTenant(e.target.value)}
+                                                disabled={true}
+                                                title="Viewers are restricted to their assigned tenant"
+                                            />
+                                        )}
                                     </div>
                                     <button type="submit" disabled={isInitialLoading} className="px-6 py-3 rounded-md text-white bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 shadow-lg shadow-cyan-900/20">
                                         {isInitialLoading ? 'Searching...' : 'Execute'}

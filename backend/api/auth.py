@@ -117,7 +117,7 @@ async def login(creds: LoginRequest, request: Request):
                 "message": f"Brute force attack blocked from IP: {ip}",
                 "source": "auth_system",
                 "tenant": "system"
-            })
+            }) 
         except Exception as e:
             print(f"Failed to save alert: {e}")
 

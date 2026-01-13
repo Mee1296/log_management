@@ -1,5 +1,6 @@
 import os
 import threading
+from db.retention_policy import cleanup
 from fastapi import FastAPI, Request, HTTPException, Query, Depends, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security.api_key import APIKeyHeader
@@ -55,3 +56,6 @@ async def startup_event():
         print(f"Failed to start Syslog server: {e}")
 
     asyncio.create_task(monitor_alerts())
+    
+    cleanup_thread = threading.Thread(target=cleanup, daemon=True)
+    cleanup_thread.start()
