@@ -7,6 +7,7 @@ CREATE TABLE logs (
     product VARCHAR(50),
     severity INT CHECK (severity >= 0 AND severity <= 10),
     action VARCHAR(50),
+    event_id INT,
     event_type VARCHAR(100),
     event_subtype VARCHAR(100),
     src_ip INET,

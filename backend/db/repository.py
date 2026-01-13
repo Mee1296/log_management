@@ -16,7 +16,7 @@ def save_to_db(data):
         # กำหนดคอลัมน์มาตรฐานตาม Schema ใน db/init.sql
         standard_columns = [
             'timestamp', 'tenant', 'source', 'vendor', 'product', 'severity', 
-            'action', 'event_type', 'event_subtype', 'src_ip', 'dst_ip', 
+            'action', 'event_id', 'event_type', 'event_subtype', 'src_ip', 'dst_ip', 
             'src_port', 'dst_port', 'protocol', 'message', 'user_name', 
             'host', 'process', 'url', 'http_method', 'status_code', 
             'cloud_account_id', 'cloud_region', 'cloud_service', 'raw_data'

@@ -57,6 +57,11 @@ async def get_logs(
     if tenant:
         validate_tenant_access(user, tenant)
     
+    if user.role != 'admin':
+        if tenant and tenant != user.tenant_access:
+             raise HTTPException(status_code=403, detail="Forbidden: Cannot access this tenant")
+        tenant = user.tenant_access
+    
     query = "SELECT * FROM logs"
     params = []
     conditions = []
@@ -83,6 +88,9 @@ async def get_logs(
 # for top sources
 @router.get("/stats/sources")
 async def get_stats_sources_all(user: User = Depends(get_current_user)):
+    if user.role != 'admin':
+        return await get_stats_sources(user.tenant_access, user)
+
     query = """
         SELECT source, COUNT(*) as count 
         FROM logs 
@@ -105,6 +113,9 @@ async def get_stats_sources(tenant: str, user: User = Depends(get_current_user))
 # Timeline api
 @router.get("/stats/timeline")
 async def get_stats_timeline_all(user: User = Depends(get_current_user)):
+    if user.role != 'admin':
+        return await get_stats_timeline(user.tenant_access, user)
+
     query = """
         SELECT date_trunc('hour', timestamp) as bucket, COUNT(*) as count 
         FROM logs 

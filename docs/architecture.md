@@ -56,5 +56,5 @@ Headers: `Authorization: Bearer <INGEST_KEY>`
 3. **Access**: `http://localhost:`
 
 ## Testing
-- **Frontend**: `cd \frontend -> npm test` (Vitest)
+- **Frontend**: `cd /frontend -> npm test` (Vitest)
 - **Backend**: `pytest` (API tests)

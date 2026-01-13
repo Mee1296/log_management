@@ -3,6 +3,7 @@ from fastapi.security.api_key import APIKeyHeader
 from pydantic import BaseModel
 from datetime import datetime, timedelta, timezone
 import os
+import json
 
 from db.repository import save_alert 
 
@@ -11,9 +12,7 @@ router = APIRouter()
 # --- Config from Env ---
 ADMIN_USER = os.getenv("ADMIN_USER", "admin")
 ADMIN_PASS = os.getenv("ADMIN_PASS", "admin123")
-VIEWER_USER = os.getenv("VIEWER_USER", "viewer")
-VIEWER_PASS = os.getenv("VIEWER_PASS", "viewer123")
-VIEWER_TENANT = os.getenv("VIEWER_TENANT", "demo")
+
 
 # Security Thresholds 
 MAX_FAILURES = int(os.getenv("AUTH_MAX_FAILURES", "3"))
@@ -26,6 +25,12 @@ api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
 api_keys_str = os.getenv("INGEST_API_KEYS", "") 
 VALID_API_KEYS = [key.strip() for key in api_keys_str.split(",") if key.strip()]
+
+try:
+    DEMO_VIEWERS = json.loads(os.getenv("DEMO_VIEWERS_JSON", "{}"))
+except Exception as e:
+    print(f"Error loading DEMO_VIEWERS_JSON: {e}")
+    DEMO_VIEWERS = {}
 
 async def verify_ingest_key(api_key: str = Security(api_key_header)):
     if api_key not in VALID_API_KEYS:
@@ -53,10 +58,14 @@ async def get_current_user(token: str = Depends(APIKeyHeader(name="Authorization
     
     if token_val == "admin-token":
         return User(username=ADMIN_USER, role="admin", tenant_access="*")
-    elif token_val == "viewer-token":
-        return User(username=VIEWER_USER, role="viewer", tenant_access=VIEWER_TENANT)
-    else:
-         raise HTTPException(status_code=401, detail="Invalid Token")
+
+    
+    if token_val.endswith("-token"):
+        username = token_val.replace("-token", "")
+        if username in DEMO_VIEWERS:
+             return User(username=username, role="viewer", tenant_access=DEMO_VIEWERS[username]["tenant"])
+
+    raise HTTPException(status_code=401, detail="Invalid Token")
 
 def get_client_ip(request: Request):
     return request.client.host
@@ -92,10 +101,18 @@ async def login(creds: LoginRequest, request: Request):
         if ip in blocked_ips: del blocked_ips[ip]
         return { "status": "success", "token": "admin-token", "role": "admin", "tenant_id": "*", "tenant_access": "*" }
 
-    if creds.username == VIEWER_USER and creds.password == VIEWER_PASS:
-        if ip in failed_logins: del failed_logins[ip]
-        if ip in blocked_ips: del blocked_ips[ip]
-        return { "status": "success", "token": "viewer-token", "role": "viewer", "tenant_id": VIEWER_TENANT, "tenant_access": VIEWER_TENANT }
+    if creds.username in DEMO_VIEWERS:
+        user_data = DEMO_VIEWERS[creds.username]
+        if creds.password == user_data["password"]:
+            if ip in failed_logins: del failed_logins[ip]
+            if ip in blocked_ips: del blocked_ips[ip]
+            return { 
+                "status": "success", 
+                "token": f"{creds.username}-token", 
+                "role": "viewer", 
+                "tenant_id": user_data["tenant"], 
+                "tenant_access": user_data["tenant"] 
+            }
 
     # 3. Handle Failure
     cleanup_old_failures(ip)
@@ -106,7 +123,7 @@ async def login(creds: LoginRequest, request: Request):
     failed_logins[ip].append(now)
     
     # Check threshold
-    if len(failed_logins[ip]) >= MAX_FAILURES: # ใช้ >=
+    if len(failed_logins[ip]) >= MAX_FAILURES: 
         blocked_ips[ip] = now + timedelta(hours=BLOCK_HOURS)
         
         print(f"[SECURITY] Blocking IP {ip} due to brute force.")

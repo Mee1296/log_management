@@ -6,13 +6,11 @@ This guide adds HTTPS (TLS) and Multi-tenancy configurations for running the sys
 ## HTTPS Configuration (TLS)
 
 1. **Generate Certificates**
-   Run the following command to generate self-signed certificates for testing (or use Let's Encrypt for production):
+   Run the following command to generate self-signed certificates for testing:
    ```bash
-   mkdir -p certs
-   openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-     -keyout certs/server.key \
-     -out certs/server.crt \
-     -subj "/C=US/ST=State/L=City/O=Org/CN=yourdomain.com"
+   cd scipts && chmod +X *.sh
+   ./setup_ssl.sh
+   docker-compose up -d
    ```
 
 2. **Update Configuration**

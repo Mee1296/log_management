@@ -13,6 +13,7 @@ class LogSchema(BaseModel):
     product: Optional[str] = None      
     severity: int = 5
     action: Optional[str] = None
+    event_id: Optional[int] = None
     event_type: Optional[str] = None
     event_subtype: Optional[str] = None
     src_ip: Optional[str] = None
@@ -129,6 +130,20 @@ def parse_log(raw_data, source_type):
             user_name=data.get("UserId"),
             cloud_service=data.get("Workload"),
             src_ip=data.get("ClientIP"),
+            raw_data=json.dumps(data)
+        ).model_dump()
+    
+    if source_type == "ad" :
+        # Mapping for Windows AD Logs (Event 4625 etc)
+        return LogSchema(
+            timestamp=normalize_timestamp(data.get("@timestamp")),
+            tenant=data.get("tenant", "default"),
+            source="ad",
+            event_id=data.get("event_id"),
+            event_type=data.get("event_type"),
+            user_name=data.get("user"),    
+            host=data.get("host"),
+            src_ip=data.get("ip"),
             raw_data=json.dumps(data)
         ).model_dump()
 
