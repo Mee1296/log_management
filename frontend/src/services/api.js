@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || ''; 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 let authToken = null;
 
@@ -33,7 +33,8 @@ export const fetchLogs = async (tenant, params = {}) => {
 
 export const fetchSourceStats = async (tenant) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/stats/sources/${tenant}`, {
+        const url = tenant ? `${API_BASE_URL}/stats/sources/${tenant}` : `${API_BASE_URL}/stats/sources`;
+        const response = await axios.get(url, {
             headers: getHeaders()
         });
         return response.data;
@@ -45,7 +46,8 @@ export const fetchSourceStats = async (tenant) => {
 
 export const fetchTimelineStats = async (tenant) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/stats/timeline/${tenant}`, {
+        const url = tenant ? `${API_BASE_URL}/stats/timeline/${tenant}` : `${API_BASE_URL}/stats/timeline`;
+        const response = await axios.get(url, {
             headers: getHeaders()
         });
         return response.data;

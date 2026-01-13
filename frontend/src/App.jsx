@@ -13,8 +13,8 @@ function App() {
     const [userTenantAccess, setUserTenantAccess] = useState(localStorage.getItem('userTenantAccess') || '*');
 
     const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' | 'alerts'
-    const [tenant, setTenant] = useState('default');
-    const [searchTenant, setSearchTenant] = useState('default');
+    const [tenant, setTenant] = useState('');
+    const [searchTenant, setSearchTenant] = useState('');
     const [logs, setLogs] = useState([]);
     const [timeline, setTimeline] = useState([]);
     const [sourceStats, setSourceStats] = useState([]);
@@ -32,7 +32,7 @@ function App() {
                 fetchLogs(currentTenant),
                 fetchTimelineStats(currentTenant),
                 fetchSourceStats(currentTenant),
-                fetchAlerts() // Alerts might ignore tenant filter for Admin, but Viewers will be filtered by API
+                userRole !== 'viewer' ? fetchAlerts() : Promise.resolve([])
             ]);
             setLogs(l || []);
             setTimeline(t || []);
@@ -69,7 +69,6 @@ function App() {
         localStorage.setItem('authToken', token);
         localStorage.setItem('userRole', role);
         localStorage.setItem('userTenantAccess', tenant_access);
-        // Also store tenant_id if different, relying on tenant_access for now as they are same usually.
         localStorage.setItem('userTenantId', tenant_id || tenant_access);
 
         setAuthToken(token);
@@ -134,13 +133,16 @@ function App() {
                         >
                             <LayoutDashboard className="w-4 h-4" /> Dashboard
                         </button>
-                        <button
-                            onClick={() => setCurrentView('alerts')}
-                            className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${currentView === 'alerts' ? 'bg-red-500/10 text-red-500 border border-red-500/20 shadow-sm' : 'text-gray-400 hover:text-white'}`}
-                        >
-                            <Bell className="w-4 h-4" /> Alerts
-                            {alerts.length > 0 && <span className="px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px]">{alerts.length}</span>}
-                        </button>
+
+                        {userRole !== 'viewer' && (
+                            <button
+                                onClick={() => setCurrentView('alerts')}
+                                className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${currentView === 'alerts' ? 'bg-red-500/10 text-red-500 border border-red-500/20 shadow-sm' : 'text-gray-400 hover:text-white'}`}
+                            >
+                                <Bell className="w-4 h-4" /> Alerts
+                                {alerts.length > 0 && <span className="px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px]">{alerts.length}</span>}
+                            </button>
+                        )}
                     </div>
                     <div className="mt-4 md:mt-0 flex items-center gap-4">
                         {isRefreshing && (
@@ -154,74 +156,74 @@ function App() {
                     </div>
                 </header>
 
-                {currentView === 'dashboard' ? (
-                    <>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <SummaryCard title="Total Events" value={logs.length} icon={Database} />
-                            <SummaryCard title="Active Sources" value={sourceStats.length} icon={Server} color="text-purple-400" />
-                            <SummaryCard title="System Load" value={`${sourceStats.length > 0 ? 'HIGH' : 'IDLE'}`} icon={Activity} color="text-green-400" />
-                        </div>
+                {
+                    currentView === 'dashboard' ? (
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <SummaryCard title="Total Events" value={logs.length} icon={Database} />
+                                <SummaryCard title="Active Sources" value={sourceStats.length} icon={Server} color="text-purple-400" />
+                                <SummaryCard title="System Load" value={`${sourceStats.length > 0 ? 'HIGH' : 'IDLE'}`} icon={Activity} color="text-green-400" />
+                            </div>
 
-                        <div className="bg-gray-900/50 border border-gray-800 p-4 rounded-lg backdrop-blur-sm">
-                            <form onSubmit={handleSearch} className="flex gap-4">
-                                <div className="relative flex-grow">
-                                    <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-500" />
-                                    <input
-                                        type="text"
-                                        className="block w-full pl-10 pr-3 py-3 border border-gray-700 rounded-md bg-gray-950 text-gray-300 placeholder-gray-600 focus:outline-none focus:border-cyan-500 font-mono disabled:opacity-50 disabled:cursor-not-allowed"
-                                        placeholder="Filter by Tenant ID..."
-                                        value={tenant}
-                                        onChange={(e) => setTenant(e.target.value)}
-                                        disabled={userRole === 'viewer'}
-                                        title={userRole === 'viewer' ? "Viewers cannot switch tenants" : ""}
-                                    />
-                                </div>
-                                <button type="submit" disabled={isInitialLoading} className="px-6 py-3 rounded-md text-white bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 shadow-lg shadow-cyan-900/20">
-                                    {isInitialLoading ? 'Searching...' : 'Execute'}
-                                </button>
-                            </form>
-                        </div>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div className="lg:col-span-2 space-y-6">
-                                <LogChart data={timeline} />
-                                <div className="bg-gray-900 border border-gray-800 rounded-lg p-1">
-                                    <div className="p-4 border-b border-gray-800 flex justify-between items-center">
-                                        <h3 className="text-sm font-medium text-gray-300 flex items-center gap-2">
-                                            <Terminal className="w-4 h-4 text-gray-500" /> Live Stream
-                                        </h3>
-                                        <span className="text-xs text-gray-600 font-mono">Real-time</span>
+                            <div className="bg-gray-900/50 border border-gray-800 p-4 rounded-lg backdrop-blur-sm">
+                                <form onSubmit={handleSearch} className="flex gap-4">
+                                    <div className="relative flex-grow">
+                                        <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-500" />
+                                        <input
+                                            type="text"
+                                            className="block w-full pl-10 pr-3 py-3 border border-gray-700 rounded-md bg-gray-950 text-gray-300 placeholder-gray-600 focus:outline-none focus:border-cyan-500 font-mono disabled:opacity-50 disabled:cursor-not-allowed"
+                                            placeholder="Filter by Tenant ID..."
+                                            value={tenant}
+                                            onChange={(e) => setTenant(e.target.value)}
+                                        />
                                     </div>
-                                    <LogTable logs={logs} />
-                                </div>
+                                    <button type="submit" disabled={isInitialLoading} className="px-6 py-3 rounded-md text-white bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 shadow-lg shadow-cyan-900/20">
+                                        {isInitialLoading ? 'Searching...' : 'Execute'}
+                                    </button>
+                                </form>
                             </div>
-                            <div className="space-y-6">
-                                <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 h-full">
-                                    <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-4">Top Log Sources</h3>
-                                    {sourceStats.length === 0 ? (
-                                        <p className="text-sm text-gray-600 italic">No active sources</p>
-                                    ) : (
-                                        <div className="space-y-3">
-                                            {sourceStats.map((s, i) => (
-                                                <div key={i} className="flex justify-between items-center group cursor-default">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-2 h-2 rounded-full bg-cyan-500/50 group-hover:bg-cyan-400"></div>
-                                                        <span className="text-sm text-gray-300 font-mono">{s.source}</span>
-                                                    </div>
-                                                    <span className="text-xs font-bold text-gray-500 bg-gray-800 px-2 py-1 rounded group-hover:text-white">{s.count}</span>
-                                                </div>
-                                            ))}
+
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div className="lg:col-span-2 space-y-6">
+                                    <LogChart data={timeline} />
+                                    <div className="bg-gray-900 border border-gray-800 rounded-lg p-1">
+                                        <div className="p-4 border-b border-gray-800 flex justify-between items-center">
+                                            <h3 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                                                <Terminal className="w-4 h-4 text-gray-500" /> Live Stream
+                                            </h3>
+                                            <span className="text-xs text-gray-600 font-mono">Real-time</span>
                                         </div>
-                                    )}
+                                        <LogTable logs={logs} />
+                                    </div>
+                                </div>
+                                <div className="space-y-6">
+                                    <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 h-full">
+                                        <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-4">Top Log Sources</h3>
+                                        {sourceStats.length === 0 ? (
+                                            <p className="text-sm text-gray-600 italic">No active sources</p>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {sourceStats.map((s, i) => (
+                                                    <div key={i} className="flex justify-between items-center group cursor-default">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-2 h-2 rounded-full bg-cyan-500/50 group-hover:bg-cyan-400"></div>
+                                                            <span className="text-sm text-gray-300 font-mono">{s.source}</span>
+                                                        </div>
+                                                        <span className="text-xs font-bold text-gray-500 bg-gray-800 px-2 py-1 rounded group-hover:text-white">{s.count}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </>
-                ) : (
-                    <Alerts alerts={alerts} />
-                )}
-            </div>
-        </div>
+                        </>
+                    ) : (
+                        <Alerts alerts={alerts} />
+                    )
+                }
+            </div >
+        </div >
     );
 }
 

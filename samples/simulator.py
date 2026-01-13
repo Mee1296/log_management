@@ -4,9 +4,16 @@ from datetime import datetime, timezone
 import time
 import random
 import socket
+import os
 
-API_URL = "https://backend-production-022e.up.railway.app/api/v1/ingest"
-UDP_IP = "10.64.0.2"
+dev_status = os.getenv("STATUS", "development")
+
+if dev_status != "development":
+    API_URL = "https://backend-production-022e.up.railway.app/api/v1/ingest"
+    UDP_IP = "10.64.0.2"
+else :
+    API_URL = "https://localhost/api/v1/ingest"
+    UDP_IP =  "0.0.0.0"
 UDP_PORT = 514
 
 HEADERS = {
@@ -38,7 +45,7 @@ def generate_log(source=None):
 def send_http_log():
     try:
         log = generate_log()
-        resp = requests.post(f"{API_URL}/{log['source']}", json=log, headers=HEADERS)
+        resp = requests.post(f"{API_URL}/{log['source']}", json=log, headers=HEADERS, verify=False)
         print(f"[HTTP] Single: {resp.status_code}")
     except Exception as e:
         print(f"[HTTP] Error: {e}")
@@ -59,7 +66,7 @@ def send_aws_log():
             "sourceIPAddress": f"10.0.{random.randint(1,255)}.{random.randint(1,255)}"
         }
         # Send to /ingest/aws
-        resp = requests.post(f"{API_URL}/aws", json=log, headers=HEADERS)
+        resp = requests.post(f"{API_URL}/aws", json=log, headers=HEADERS, verify=False)
         print(f"[HTTP] AWS: {resp.status_code}")
     except Exception as e:
         print(f"[HTTP] AWS Error: {e}")
@@ -76,7 +83,7 @@ def send_m365_log():
             "ClientIP": f"192.168.{random.randint(1,255)}.{random.randint(1,255)}"
         }
         # Send to /ingest/m365
-        resp = requests.post(f"{API_URL}/m365", json=log, headers=HEADERS)
+        resp = requests.post(f"{API_URL}/m365", json=log, headers=HEADERS, verify=False)
         print(f"[HTTP] M365: {resp.status_code}")
     except Exception as e:
         print(f"[HTTP] M365 Error: {e}")
@@ -85,7 +92,7 @@ def send_batch_log():
     try:
         batch = [generate_log() for _ in range(random.randint(2, 5))]
         # Use 'batch' source type or generic
-        resp = requests.post(f"{API_URL}/batch_loader", json=batch, headers=HEADERS)
+        resp = requests.post(f"{API_URL}/batch_loader", json=batch, headers=HEADERS, verify=False)
         print(f"[HTTP] Batch ({len(batch)}): {resp.status_code}")
     except Exception as e:
         print(f"[HTTP] Batch Error: {e}")

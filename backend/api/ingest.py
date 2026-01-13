@@ -48,30 +48,49 @@ async def ingest_logs(source_type: str, request: Request):
 # search api for each tenant
 @router.get("/logs")
 async def get_logs(
-        tenant: str, 
+        tenant: Optional[str] = None, 
         source: Optional[str] = None, 
         severity: Optional[int] = None,
         limit: int = Query(100, le=1000),
         user: User = Depends(get_current_user)
     ):
-    validate_tenant_access(user, tenant)
+    if tenant:
+        validate_tenant_access(user, tenant)
     
-    query = "SELECT * FROM logs WHERE tenant = %s"
-    params = [tenant]
+    query = "SELECT * FROM logs"
+    params = []
+    conditions = []
+
+    if tenant:
+        conditions.append("tenant = %s")
+        params.append(tenant)
     
     if source:
-        query += " AND source = %s"
+        conditions.append("source = %s")
         params.append(source)
     if severity is not None:
-        query += " AND severity = %s"
+        conditions.append("severity = %s")
         params.append(severity)
-        
+    
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+
     query += " ORDER BY timestamp DESC LIMIT %s"
     params.append(limit)
     
     return fetch_from_db(query, tuple(params))
 
 # for top sources
+@router.get("/stats/sources")
+async def get_stats_sources_all(user: User = Depends(get_current_user)):
+    query = """
+        SELECT source, COUNT(*) as count 
+        FROM logs 
+        GROUP BY source 
+        ORDER BY count DESC
+    """
+    return fetch_from_db(query, ())
+
 @router.get("/stats/sources/{tenant}")
 async def get_stats_sources(tenant: str, user: User = Depends(get_current_user)):
     validate_tenant_access(user, tenant)
@@ -84,6 +103,16 @@ async def get_stats_sources(tenant: str, user: User = Depends(get_current_user))
     return fetch_from_db(query, (tenant,))
     
 # Timeline api
+@router.get("/stats/timeline")
+async def get_stats_timeline_all(user: User = Depends(get_current_user)):
+    query = """
+        SELECT date_trunc('hour', timestamp) as bucket, COUNT(*) as count 
+        FROM logs 
+        GROUP BY bucket 
+        ORDER BY bucket ASC
+    """
+    return fetch_from_db(query, ())
+
 @router.get("/stats/timeline/{tenant}")
 async def get_stats_timeline(tenant: str, user: User = Depends(get_current_user)):
     validate_tenant_access(user, tenant)
