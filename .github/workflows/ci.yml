@@ -57,7 +57,8 @@ jobs:
           pip install pytest httpx
       - name: Run Backend Unit Tests
         env:
-          PYTHONPATH: .
+          PYTHONPATH: ${{ github.workspace }}
+          DATABASE_URL: postgresql://password123@localhost:5432/db
         run: |
           cd backend
           python -m pytest test_main.py -v

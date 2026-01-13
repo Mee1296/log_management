@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
-from backend.main import app
-from backend.services.parser import parse_syslog_text
+from main import app
+from services.parser import parse_syslog_text
 import os
 
 client = TestClient(app)
