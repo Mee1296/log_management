@@ -27,9 +27,9 @@ api_keys_str = os.getenv("INGEST_API_KEYS", "")
 VALID_API_KEYS = [key.strip() for key in api_keys_str.split(",") if key.strip()]
 
 try:
-    DEMO_VIEWERS = json.loads(os.getenv("DEMO_VIEWERS_JSON", "{}"))
+    DEMO_VIEWERS = json.loads(os.getenv("VIEWERS_JSON", "{}"))
 except Exception as e:
-    print(f"Error loading DEMO_VIEWERS_JSON: {e}")
+    print(f"Error loading VIEWERS_JSON: {e}")
     DEMO_VIEWERS = {}
 
 async def verify_ingest_key(api_key: str = Security(api_key_header)):
