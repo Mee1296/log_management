@@ -30,7 +30,7 @@ function App() {
 
         try {
             const [l, t, s, a] = await Promise.all([
-                fetchLogs(currentTenant),
+                fetchLogs(currentTenant, { limit: 5000 }),
                 fetchTimelineStats(currentTenant),
                 fetchSourceStats(currentTenant),
                 userRole !== 'viewer' ? fetchAlerts() : Promise.resolve([])

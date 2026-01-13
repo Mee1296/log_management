@@ -26,9 +26,9 @@ const LogTable = ({ logs }) => {
 
     return (
         <>
-            <div className="overflow-x-auto rounded-lg border border-gray-800 bg-gray-900 shadow-xl">
+            <div className="overflow-x-auto overflow-y-auto max-h-[600px] rounded-lg border border-gray-800 bg-gray-900 shadow-xl custom-scrollbar">
                 <table className="w-full text-left text-xs md:text-sm">
-                    <thead className="bg-gray-800/50 text-gray-400 uppercase tracking-wider text-xs border-b border-gray-700">
+                    <thead className="bg-gray-800 text-gray-400 uppercase tracking-wider text-xs border-b border-gray-700 sticky top-0 z-10 shadow-sm">
                         <tr>
                             <th className="p-3 w-10">#</th>
                             <th className="p-3 w-40">Timestamp</th>

@@ -51,7 +51,7 @@ async def get_logs(
         tenant: Optional[str] = None, 
         source: Optional[str] = None, 
         severity: Optional[int] = None,
-        limit: int = Query(100, le=1000),
+        limit: int = Query(1000, le=10000),
         user: User = Depends(get_current_user)
     ):
     if tenant:

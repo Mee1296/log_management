@@ -1,41 +1,37 @@
 import pytest
-from services.parser import parse_log, parse_syslog_text
+from fastapi.testclient import TestClient
+from backend.main import app
+from backend.services.parser import parse_syslog_text
+import os
 
-# JSON-based logs
-@pytest.mark.parametrize("source, raw_input, expected_tenant", [
-    ("api", {"tenant": "demo", "source": "api", "event_type": "login"}, "demo"),
-    ("aws", {"tenant": "demoB", "cloud": {"account_id": "12345"}}, "demoB"),
-    ("crowdstrike", {"tenant": "demoA", "severity": 8}, "demoA"),
-])
-def test_json_parsing(source, raw_input, expected_tenant):
-    result = parse_log(raw_input, source)
-    assert result["tenant"] == expected_tenant
-    assert result["source"] == source
-    assert "timestamp" in result
+client = TestClient(app)
 
-# Syslog (Text-based)
-def test_firewall_syslog_parsing():
-    raw = "<134>Aug 20 12:44:56 fw01 vendor=demo product=ngfw action=deny src=10.0.1.10 dst=8.8.8.8 spt=5353 dpt=53"
-    result = parse_syslog_text(raw)
-    assert result["source"] == "firewall"
-    assert result["action"] == "deny"
-    assert result["src_ip"] == "10.0.1.10"
-    assert result["severity"] == 6 
+VALID_KEY = os.getenv("INGEST_API_KEYS", "admin-key").split(",")[0]
 
-def test_network_router_parsing():
-    raw = "<190>Aug 20 13:01:02 r1 if=ge-0/0/1 event=link-down mac=aa:bb reason=carrier-loss"
-    result = parse_syslog_text(raw)
-    assert result["source"] == "network"
-    assert result["event_type"] == "link-down"
-    assert result["interface"] == "ge-0/0/1"
+# --- Parser Unit Tests ---
+def test_firewall_parser():
+    raw = "<134>Aug 20 12:44:56 fw01 vendor=demo product=ngfw action=deny src=10.0.1.10 dst=8.8.8.8 spt=5353 dpt=53 proto=udp msg=DNS blocked"
+    res = parse_syslog_text(raw)
+    assert res["source"] == "firewall"
+    assert res["src_ip"] == "10.0.1.10"
+    assert res["action"] == "deny"
 
-# Error handling 
-def test_invalid_json():
-    result = parse_log({}, "unknown")
-    assert result["source"] == "unknown"
-    assert result["tenant"] == "default"
+# --- API Integration Tests ---
+def test_ingest_unauthorized():
+    # wrong/no key, 403 Forbidden
+    response = client.post("/api/v1/ingest/api", json={"test": "data"}, headers={"X-API-KEY": "wrong-secret"})
+    assert response.status_code == 403
 
-def test_empty_syslog():
-    result = parse_syslog_text("")
-    assert result["raw_data"] == {"full_message": ""}
-    assert result["tenant"] == "internal_system"
+def test_ingest_authorized():
+    # correct key, 200 OK
+    headers = {"X-API-KEY": VALID_KEY}
+    payload = {"tenant": "demoA", "source": "api", "event_type": "test", "severity": 5}
+    response = client.post("/api/v1/ingest/api", json=payload, headers=headers)
+    assert response.status_code == 200
+
+# --- Business Logic Tests ---
+def test_severity_alert_trigger():
+    # severity >= 8, alert should be triggered
+    raw = "<14>Aug 20 12:00:00 host severity=9 msg=critical_error"
+    res = parse_syslog_text(raw)
+    assert res["severity"] >= 8

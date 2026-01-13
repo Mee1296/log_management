@@ -6,6 +6,10 @@ import random
 import socket
 import os
 
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 dev_status = os.getenv("STATUS", "development")
 
 if dev_status != "development":
@@ -13,7 +17,7 @@ if dev_status != "development":
     UDP_IP = "10.64.0.2"
 else :
     API_URL = "https://localhost/api/v1/ingest"
-    UDP_IP =  "0.0.0.0"
+    UDP_IP =  "127.0.1"
 UDP_PORT = 514
 
 HEADERS = {
@@ -88,6 +92,23 @@ def send_m365_log():
     except Exception as e:
         print(f"[HTTP] M365 Error: {e}")
 
+def send_ad_log():
+    try:
+        log = {
+            "tenant": random.choice(["demoA", "demoB"]),
+            "source": "ad",
+            "event_id": 4625, # Logon Failed
+            "event_type": "LogonFailed",
+            "user": f"demo\\{random.choice(['admin', 'guest', 'eve'])}",
+            "severity": 9, # Severity สูงเพื่อทดสอบระบบ Alert
+            "ip": f"192.168.1.{random.randint(100,200)}",
+            "@timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        resp = requests.post(f"{API_URL}/ad", json=log, headers=HEADERS, verify=False)
+        print(f"[HTTP] AD Security: {resp.status_code}")
+    except Exception as e:
+        print(f"[HTTP] AD Error: {e}")
+
 def send_batch_log():
     try:
         batch = [generate_log() for _ in range(random.randint(2, 5))]
@@ -119,6 +140,8 @@ if __name__ == "__main__":
             send_aws_log()
         if random.random() < 0.2:
             send_m365_log()
+        if random.random() < 0.2:
+            send_ad_log()
         
         # time.sleep(0.1)
         count += 1
