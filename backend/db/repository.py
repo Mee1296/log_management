@@ -72,3 +72,31 @@ def fetch_from_db(query: str, params: tuple):
     except Exception as e:
         print(f"Query Error: {e}")
         return []
+    
+def register_user(tenant: str, username: str, password_hash: str, email: str):
+    try:
+        conn = psycopg2.connect(DB_URL)
+        cur = conn.cursor()
+        insert_query = "INSERT INTO users (tenant, username, password_hash, email) VALUES (%s, %s, %s)"
+        cur.execute(insert_query, (tenant, username, password_hash, email))
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"User Registration Error: {e}")
+
+
+# for admin only, just for testing purpose, not for production use
+def fetch_user():
+    try:
+        conn = psycopg2.connect(DB_URL)
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        select_query = "SELECT * FROM users"
+        cur.execute(select_query)
+        user = cur.fetchone()
+        cur.close()
+        conn.close()
+        return user
+    except Exception as e:
+        print(f"Fetch User Error: {e}")
+        return None

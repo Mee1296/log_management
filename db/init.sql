@@ -1,4 +1,4 @@
-CREATE TABLE logs (
+CREATE TABLE if not exists logs (
     id SERIAL PRIMARY KEY,
     timestamp TIMESTAMPTZ NOT NULL,
     tenant VARCHAR(50) NOT NULL,
@@ -34,13 +34,23 @@ CREATE TABLE logs (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE alerts (
+CREATE TABLE if not exists alerts (
     id SERIAL PRIMARY KEY,
     timestamp TIMESTAMPTZ NOT NULL,
     severity INT,
     message TEXT,
     source TEXT,
     tenant TEXT
+);
+
+CREATE TABLE if not exists users (
+    id SERIAL PRIMARY KEY,
+    tenant VARCHAR(50) NOT NULL,
+    username VARCHAR(100) NOT NULL,
+    password_hash VARCHAR(200) NOT NULL,
+    email VARCHAR(100),
+    role VARCHAR(50) DEFAULT 'user',
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_logs_timestamp ON logs(timestamp);

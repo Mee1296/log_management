@@ -5,9 +5,10 @@ import time
 import random
 import socket
 import os
-
+from dotenv import load_dotenv
 import urllib3
 
+load_dotenv()
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 dev_status = os.getenv("STATUS", "deployment")
@@ -129,7 +130,7 @@ def send_udp_log():
 
 if __name__ == "__main__":
     print("Starting Traffic Simulator...")
-    count = 0;
+    count = 0
     while count < 100:
         send_http_log()
         if random.random() < 0.3:
