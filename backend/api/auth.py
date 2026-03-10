@@ -50,6 +50,7 @@ class RegisterRequest(BaseModel):
     username: str
     password: str
     tenant: str
+    email: str
 
 class User(BaseModel):
     username: str
@@ -167,7 +168,7 @@ async def register(creds: RegisterRequest, current_user: User = Depends(get_curr
     
     try:
         hashed_password = hash_password(creds.password)
-        register_user(tenant=creds.tenant, username=creds.username, password_hash=hashed_password, email="")
+        register_user(tenant=creds.tenant, username=creds.username, password_hash=hashed_password, email=creds.email)
         return { "status": "success", "message": f"User {creds.username} registered successfully for tenant {creds.tenant}." }
     except Exception as e:
         print(f"Error registering user: {e}")

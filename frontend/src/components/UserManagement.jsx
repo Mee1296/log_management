@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { UserPlus, Shield, User, Key, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { UserPlus, Shield, User, Key, AlertTriangle, CheckCircle2, Mail } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
@@ -8,6 +8,7 @@ function UserManagement() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [tenant, setTenant] = useState('');
+    const [email, setEmail] = useState('');
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +22,7 @@ function UserManagement() {
         try {
             const token = localStorage.getItem('authToken');
             const response = await axios.post(`${API_BASE_URL}/register`, 
-                { username, password, tenant },
+                { username, password, tenant, email },
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -34,10 +35,24 @@ function UserManagement() {
                 setUsername('');
                 setPassword('');
                 setTenant('');
+                setEmail('');
             }
         } catch (err) {
             console.error("Registration error:", err);
-            setError(err.response?.data?.detail || "Registration failed.");
+            
+            let message = "Registration failed.";
+            if (err.response && err.response.data && err.response.data.detail) {
+                if (typeof err.response.data.detail === 'string') {
+                    message = err.response.data.detail;
+                } else if (Array.isArray(err.response.data.detail)) {
+                    // Handle FastAPI Pydantic Validation error format
+                    message = err.response.data.detail.map(d => d.msg).join(', ');
+                } else {
+                    message = JSON.stringify(err.response.data.detail);
+                }
+            }
+            
+            setError(message);
         } finally {
             setIsLoading(false);
         }
@@ -75,6 +90,21 @@ function UserManagement() {
                                         onChange={(e) => setUsername(e.target.value)}
                                         className="w-full bg-gray-950/50 border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-mono"
                                         placeholder="Enter username"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium text-gray-400 ml-1 uppercase tracking-wider">Email</label>
+                                <div className="relative group">
+                                    <Mail className="absolute left-3 top-3.5 w-4 h-4 text-gray-500 group-focus-within:text-cyan-500 transition-colors" />
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="w-full bg-gray-950/50 border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-mono"
+                                        placeholder="user@example.com"
                                         required
                                     />
                                 </div>
