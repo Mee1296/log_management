@@ -27,11 +27,11 @@ api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 api_keys_str = os.getenv("INGEST_API_KEYS", "") 
 VALID_API_KEYS = [key.strip() for key in api_keys_str.split(",") if key.strip()]
 
+# Users are loaded dynamically from DB
 try:
-    USERS = fetch_user()
+    pass
 except Exception as e:
-    print(f"Error loading USERS: {e}")
-    USERS = {}
+    print(f"Error initializing auth: {e}")
 
 async def verify_ingest_key(api_key: str = Security(api_key_header)):
     if api_key not in VALID_API_KEYS:
@@ -45,6 +45,11 @@ blocked_ips: dict[str, datetime] = {}
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+    tenant: str
 
 class User(BaseModel):
     username: str
@@ -60,11 +65,12 @@ async def get_current_user(token: str = Depends(APIKeyHeader(name="Authorization
     if token_val == "admin-token":
         return User(username=ADMIN_USER, role="admin", tenant_access="*")
 
-    
     if token_val.endswith("-token"):
         username = token_val.replace("-token", "")
-        if username in USERS:
-             return User(username=username, role="viewer", tenant_access=USERS[username]["tenant"])
+        # Dynamically fetch user check
+        user_info = fetch_user(username)
+        if user_info:
+             return User(username=username, role="viewer", tenant_access=user_info["tenant"])
 
     raise HTTPException(status_code=401, detail="Invalid Token")
 
@@ -112,8 +118,8 @@ async def login(creds: LoginRequest, request: Request):
         if ip in blocked_ips: del blocked_ips[ip]
         return { "status": "success", "token": "admin-token", "role": "admin", "tenant_id": "*", "tenant_access": "*" }
 
-    if creds.username in USERS:
-        user_info = USERS[creds.username]
+    user_info = fetch_user(creds.username)
+    if user_info:
         stored_hash = user_info.get("password_hash", "")
         if verify_password(creds.password, stored_hash):
             if ip in failed_logins: del failed_logins[ip]
@@ -152,18 +158,17 @@ async def login(creds: LoginRequest, request: Request):
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
 @router.post("/register")
-async def register(creds: LoginRequest, current_user: User = Depends(get_current_user)):
+async def register(creds: RegisterRequest, current_user: User = Depends(get_current_user)):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Only admin can register new users")
     
-    if creds.username in USERS:
+    if fetch_user(creds.username):
         raise HTTPException(status_code=400, detail="Username already exists")
     
     try:
         hashed_password = hash_password(creds.password)
-        register_user(tenant=creds.username, username=creds.username, password_hash=hashed_password, email="")
-        USERS[creds.username] = {"password_hash": hashed_password, "tenant": creds.username}
-        return { "status": "success", "message": f"User {creds.username} registered successfully." }
+        register_user(tenant=creds.tenant, username=creds.username, password_hash=hashed_password, email="")
+        return { "status": "success", "message": f"User {creds.username} registered successfully for tenant {creds.tenant}." }
     except Exception as e:
         print(f"Error registering user: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")

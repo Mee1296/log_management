@@ -77,7 +77,7 @@ def register_user(tenant: str, username: str, password_hash: str, email: str):
     try:
         conn = psycopg2.connect(DB_URL)
         cur = conn.cursor()
-        insert_query = "INSERT INTO users (tenant, username, password_hash, email) VALUES (%s, %s, %s)"
+        insert_query = "INSERT INTO users (tenant, username, password_hash, email) VALUES (%s, %s, %s, %s)"
         cur.execute(insert_query, (tenant, username, password_hash, email))
         conn.commit()
         cur.close()
@@ -87,12 +87,12 @@ def register_user(tenant: str, username: str, password_hash: str, email: str):
 
 
 # for admin only, just for testing purpose, not for production use
-def fetch_user():
+def fetch_user(username: str):
     try:
         conn = psycopg2.connect(DB_URL)
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        select_query = "SELECT * FROM users"
-        cur.execute(select_query)
+        select_query = "SELECT * FROM users WHERE username = %s"
+        cur.execute(select_query, (username,))
         user = cur.fetchone()
         cur.close()
         conn.close()

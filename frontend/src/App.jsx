@@ -5,7 +5,8 @@ import LogTable from './components/LogTable';
 import LogChart from './components/LogChart';
 import Login from './components/Login';
 import Alerts from './components/Alerts';
-import { Activity, Database, Server, Search, RefreshCw, Terminal, LogOut, LayoutDashboard, Bell } from 'lucide-react';
+import UserManagement from './components/UserManagement';
+import { Activity, Database, Server, Search, RefreshCw, Terminal, LogOut, LayoutDashboard, Bell, Users } from 'lucide-react';
 
 function App() {
     const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('isLoggedIn'));
@@ -139,6 +140,15 @@ function App() {
                             <LayoutDashboard className="w-4 h-4" /> Dashboard
                         </button>
 
+                        {userRole === 'admin' && (
+                            <button
+                                onClick={() => setCurrentView('users')}
+                                className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${currentView === 'users' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}
+                            >
+                                <Users className="w-4 h-4" /> Users
+                            </button>
+                        )}
+
                         {userRole !== 'viewer' && (
                             <button
                                 onClick={() => setCurrentView('alerts')}
@@ -238,9 +248,11 @@ function App() {
                                 </div>
                             </div>
                         </>
-                    ) : (
+                    ) : currentView === 'alerts' ? (
                         <Alerts alerts={alerts} />
-                    )
+                    ) : currentView === 'users' && userRole === 'admin' ? (
+                        <UserManagement />
+                    ) : null
                 }
             </div >
         </div >
