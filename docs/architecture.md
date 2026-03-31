@@ -1,60 +1,48 @@
-# Log Management System - Architecture & Guide
+# LogSync - System Architecture
 
 ## System Overview
-This is a comprehensive Log Management System designed to ingest, parse, store, and visualize log data from multiple sources (Syslog, API, CloudTrail, etc.). It features a modern React Dashboard and a FastAPI backend with PostgreSQL storage.
+LogSync (LogPurple) is a high-performance, asynchronous Log Management System designed to ingest, parse, store, and visualize JSON log data from multiple sources (Cloud, Network, Host). It features a professional React Dashboard and a FastAPI backend with optimized PostgreSQL storage.
 
-## Architecture
-The system follows a microservices-style architecture composed of Docker containers:
+## The 7-Layer Architecture
 
-1. **Frontend (`frontend/`)**
-   - **Stack**: React, Vite, TailwindCSS (Dark Mode/Glassmorphism).
-   - **Role**: Visualizes log data, provides search interface.
-   - **Security**: Authenticated via JWT-like Tokens (Admin/Viewer roles).
+### 1. Ingestion Layer (The Gateway)
+The entry point for all log data. It supports two main protocols:
+*   **HTTP API (Port 8000):** Modern RESTful ingestion for cloud services (AWS, M365). Requires a secure **X-API-KEY** in the request header.
+*   **UDP Server (Port 514):** Lightweight listener for network devices. Optimized for **JSON-only** payloads to ensure consistency and speed.
 
-2. **Backend (`backend/`)**
-   - **Stack**: Python, FastAPI, Pydantic, Psycopg2.
-   - **Role**: 
-     - API Layer (`/api/v1`): Handles Login, Search, and Stats.
-     - Ingestion Layer: Receives logs via HTTP (`POST /api/v1/ingest`) or UDP Syslog (Port 514).
-     - RBAC: Enforces role-based access control (Admin vs Viewer).
+### 2. Processing Layer (The Brain)
+Responsible for turning raw data into actionable insights:
+*   **Validation:** Uses **Pydantic Schemas** to enforce data integrity (Timestamp, Source, Severity).
+*   **Normalization:** Converts varied source formats into a standardized UTC schema.
+*   **Real-time Alerting:** Automatically detects high-severity events (Severity >= 7) and creates immediate alerts.
 
-3. **Database (`db/`)**
-   - **Stack**: PostgreSQL 15.
-   - **Role**: specific `JSONB` storage for normalized logs.
+### 3. Storage Layer (The Memory)
+Designed for scalability and rapid retrieval:
+*   **PostgreSQL 15:** Uses a hybrid schema (Structured columns + `JSONB` for raw blobs).
+*   **Async Connection Pooling:** Powered by **SQLAlchemy + asyncpg**. This allows the system to handle high-concurrency ingestion without database bottlenecks.
 
-4. **Services**
-   - **Simulator (`samples/simulator.py`)**: Generates traffic (API, AWS, M365, Syslog) for testing.
-   - **Retention Policy (`backend/db/retention_policy.py`)**: runs as a sidecar to clean old logs.
-   - **Alert Monitor (`backend/services/background_tasks.py`)**: Background task that aggregates logs every minute to detect threats (e.g., Brute Force).
+### 4. Security & RBAC Layer (The Guard)
+Ensures data privacy and system integrity:
+*   **JWT Authentication:** Uses cryptographically signed JSON Web Tokens for user sessions.
+*   **Tenant Isolation:** Strict "Row-Level" style isolation ensures Viewers can only see their assigned logs.
+*   **Brute-Force Protection:** Automated IP blocking for repeated failed login attempts.
 
-## Security & RBAC
-The system implements strict access control:
+### 5. Background Services (The Workers)
+Silent processes that maintain system health:
+*   **Alert Monitor:** An async task that scans for patterns (e.g., brute force attacks) every 60 seconds.
+*   **Retention Policy:** An automated task that purges logs older than 7 days every 24 hours.
 
-- **Authentication**: Credentials stored in Environment Variables (or `.env`).
-- **Roles**:
-  - **Admin**: Full Access. Can search any tenant.
-  - **Viewer**: Restricted Access. Can ONLY view their assigned tenant. API will Block (403) any attempt to access other tenants.
-- **Protection**:
-  - **Rate Limiting**: >3 Failed Logins in 5 mins -> **IP Blocked for 1 Hour**.
-  - **Secure Secrets**: Secrets are loaded from `.env` and not hardcoded.
+### 6. Presentation Layer (The Dashboard)
+A "Modern-Plain" UI built with **React & Tailwind CSS**:
+*   **Graph-Centric Layout:** Prioritizes large timeline analytics for immediate situational awareness.
+*   **Live Stream:** Real-time event table with filtering and search.
+*   **Palette:** Professional "White, Black, and Dark Purple" aesthetic.
 
-## API Usage
-### Login
-`POST /api/v1/login`
-```json
-{ "username": "admin", "password": "..." }
-```
-Returns: `{ "token": "...", "role": "admin", "tenant_access": "*" }`
+### 7. Simulation Layer (The Tester)
+*   **Simulator (`samples/simulator.py`):** Generates realistic traffic (AWS, M365, AD) to validate the entire pipeline end-to-end.
 
-### Ingest
-`POST /api/v1/ingest/{source_type}`
-Headers: `Authorization: Bearer <INGEST_KEY>`
-
-## How to Run
-1. **Secrets**: Ensure `.env` exists with `POSTGRES_PASSWORD`, `ADMIN_USER`, etc.
-2. **Start**: `docker-compose up -d --build`
-3. **Access**: `http://localhost:`
-
-## Testing
-- **Frontend**: `cd /frontend -> npm test` (Vitest)
-- **Backend**: `pytest` (API tests)
+## Tech Stack Summary
+- **Frontend:** React 19, Vite, Tailwind CSS, Lucide Icons, Recharts.
+- **Backend:** Python 3.11, FastAPI, SQLAlchemy (Async), Pydantic, Jose (JWT), Passlib (Bcrypt).
+- **Database:** PostgreSQL 15.
+- **Infrastructure:** Docker, Docker Compose.
