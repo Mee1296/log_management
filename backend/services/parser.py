@@ -53,57 +53,6 @@ def normalize_timestamp(value) -> datetime:
 
     return datetime.now(timezone.utc)
 
-def parse_syslog_text(raw_msg):
-    extracted = {
-        "raw_data": {"full_message": raw_msg}, 
-        "timestamp": normalize_timestamp(None),
-        "tenant": "internal_system" 
-    }
-
-    if "vendor=" in raw_msg or "policy=" in raw_msg:
-        extracted["source"] = "firewall"
-    elif "event=link" in raw_msg or "if=" in raw_msg:
-        extracted["source"] = "network"
-    else:
-        extracted["source"] = "syslog_unknown"
-
-    pri_match = re.search(r'<(.*?)>', raw_msg)
-    if pri_match:
-        extracted["severity"] = int(pri_match.group(1)) % 8
-
-    kv_pairs = re.findall(r'(\w+)=(.+?)(?=\s+\w+=|$)', raw_msg)
-    field_map = {
-        "src": "src_ip", 
-        "dst": "dst_ip", 
-        "spt": "src_port", 
-        "dpt": "dst_port", 
-        "proto": "protocol", 
-        "action": "action",
-        "vendor": "vendor", 
-        "product": "product", 
-        "policy": "policy",     
-        "msg": "message",       
-        "event": "event_type", 
-        "reason": "event_subtype", 
-        "if": "interface",      
-        "mac": "mac_address"        
-    }
-    
-    for key, value in kv_pairs:
-        clean_val = value.strip()
-        if key in field_map:
-            if "port" in field_map[key]:
-                try: extracted[field_map[key]] = int(clean_val)
-                except: pass
-            else:
-                extracted[field_map[key]] = clean_val
-
-    parts = raw_msg.split()
-    if len(parts) >= 4:
-        extracted["host"] = parts[3]
-
-    return LogSchema(**extracted).model_dump()
-
 def parse_log(raw_data, source_type):
     data = raw_data if isinstance(raw_data, dict) else json.loads(raw_data)
     

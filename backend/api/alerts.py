@@ -11,23 +11,26 @@ async def get_alerts(
     user: User = Depends(get_current_user), 
     limit: int = 50
 ):
-    query = "SELECT * FROM alerts WHERE 1=1"
-    params = []
+    query = "SELECT * FROM alerts"
+    params = {"limit": limit}
+    conditions = []
     
     # RBAC Filter
-    if user.role != "admin":
-        query += " AND tenant = %s"
-        params.append(user.tenant_access)
+    if user.role != "admin" and user.tenant_access != "*":
+        conditions.append("tenant = :tenant")
+        params["tenant"] = user.tenant_access
 
     # Time Filter
     if start_date:
-        query += " AND timestamp >= %s"
-        params.append(start_date)
+        conditions.append("timestamp >= :start_date")
+        params["start_date"] = start_date
     if end_date:
-        query += " AND timestamp <= %s"
-        params.append(end_date)
+        conditions.append("timestamp <= :end_date")
+        params["end_date"] = end_date
         
-    query += " ORDER BY timestamp DESC LIMIT %s"
-    params.append(limit)
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+        
+    query += " ORDER BY timestamp DESC LIMIT :limit"
     
-    return fetch_from_db(query, tuple(params))
+    return await fetch_from_db(query, params)

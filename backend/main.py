@@ -50,13 +50,14 @@ def root():
 @app.on_event("startup")
 async def startup_event():
     try:
+        # Syslog server is blocking in its while loop, so keep in thread or make async
+        # For now, keeping in thread but it might need its own event loop if refactored to async
         udp_thread = threading.Thread(target=syslog_udp_server, daemon=True)
         udp_thread.start()
         print("Started UDP Syslog server.")
     except Exception as e:
         print(f"Failed to start Syslog server: {e}")
 
+    # Start async tasks
     asyncio.create_task(monitor_alerts())
-    
-    cleanup_thread = threading.Thread(target=cleanup, daemon=True)
-    cleanup_thread.start()
+    asyncio.create_task(cleanup())

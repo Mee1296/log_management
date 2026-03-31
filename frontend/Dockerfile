@@ -1,5 +1,5 @@
 # Stage 1: Build base
-FROM node:18-alpine as build-base
+FROM node:20-alpine as build-base
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
@@ -14,7 +14,7 @@ EXPOSE 80
 EXPOSE 443
 CMD ["nginx", "-g", "daemon off;"]
 
-FROM node:18-alpine as saas-deploy
+FROM node:20-alpine as saas-deploy
 WORKDIR /app
 RUN npm install -g serve
 COPY --from=build-base /app/dist ./dist

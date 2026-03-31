@@ -8,30 +8,22 @@ async def monitor_alerts():
         try:
             # Query: > 5 failed logins from same IP in last 5 minutes
             query = """
-                SELECT src_ip, count(*) 
+                SELECT src_ip, count(*) as count
                 FROM logs 
                 WHERE event_type = 'login_failed' 
                 AND timestamp > NOW() - INTERVAL '5 minutes' 
                 GROUP BY src_ip 
                 HAVING count(*) > 5
             """
-            results = fetch_from_db(query, ())
+            results = await fetch_from_db(query)
             
             for res in results:
                 src_ip = res.get('src_ip')
                 count = res.get('count')
                 
-                alert = {
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "severity": 8,
-                    "message": f"High rate of login failures detected from {src_ip} ({count} attempts)",
-                    "source": "system_monitor",
-                    "tenant": "default" 
-                }
-             
                 alert_msg = f"Brute Force Detected: {src_ip} ({count} fails)"
-                save_alert({
-                    "timestamp": datetime.now(),
+                await save_alert({
+                    "timestamp": datetime.now(timezone.utc),
                     "severity": 9,
                     "message": alert_msg,
                     "source": "system_monitor",

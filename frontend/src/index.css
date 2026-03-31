@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,35 +6,42 @@
 
 @layer base {
   body {
-    @apply bg-gray-950 text-gray-200 font-mono;
-    font-family: 'JetBrains Mono', monospace;
+    background-color: theme('colors.white');
+    color: theme('colors.brand.dark');
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 }
 
-/* Scrollbar customization */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-900;
+  background-color: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-700 rounded;
+  border-radius: 9999px;
+  background-color: theme('colors.brand.purple');
+  opacity: 0.2;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-cyan-500;
+  background-color: theme('colors.brand.accent');
 }
 
-/* Neon Glow Utilities */
-.neon-border {
-  box-shadow: 0 0 5px theme('colors.cyan.500'),
-    inset 0 0 5px theme('colors.cyan.900');
+.modern-surface {
+  background-color: white;
+  border-width: 1px;
+  border-color: #f3f0f7;
+  border-radius: 1rem;
+  box-shadow: theme('boxShadow.elegant');
 }
 
-.neon-text {
-  text-shadow: 0 0 5px theme('colors.cyan.400');
+.text-gradient {
+  background: linear-gradient(135deg, #4c1d95, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }

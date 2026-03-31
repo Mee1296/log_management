@@ -7,19 +7,18 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        mono: ['"JetBrains Mono"', 'monospace'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
-        cyan: {
-          400: '#22d3ee',
-          500: '#06b6d4',
-          900: '#164e63',
-        },
-        gray: {
-          800: '#1f2937',
-          900: '#111827',
-          950: '#030712', // Deep black
+        brand: {
+          light: '#fdfaff', // Very light purple tint
+          purple: '#4c1d95', // Dark Purple (violet-900)
+          dark: '#0f071a',   // Almost black purple
+          accent: '#7c3aed', // Vibrant purple
         }
+      },
+      boxShadow: {
+        'elegant': '0 4px 20px -2px rgba(76, 29, 149, 0.05), 0 2px 10px -2px rgba(0, 0, 0, 0.05)',
       }
     },
   },
