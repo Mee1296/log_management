@@ -122,16 +122,18 @@ def send_batch_log():
 def send_udp_log():
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        msg = f"<14>1 {datetime.now(timezone.utc).isoformat()} host-udp app - - - This is a syslog message severity=5"
+        # Modernized: Send JSON over UDP
+        log = generate_log(source="syslog_udp")
+        msg = json.dumps(log)
         sock.sendto(msg.encode(), (UDP_IP, UDP_PORT))
-        print(f"[UDP] Sent")
+        print(f"[UDP] Sent JSON: {log['source']}")
     except Exception as e:
         print(f"[UDP] Error: {e}")
 
 if __name__ == "__main__":
     print("Starting Traffic Simulator...")
     count = 0
-    while count < 100:
+    while count < 40:
         send_http_log()
         if random.random() < 0.3:
             send_batch_log()
